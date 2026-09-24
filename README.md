@@ -1,0 +1,1 @@
+# ada-05-spec-driven-feature
