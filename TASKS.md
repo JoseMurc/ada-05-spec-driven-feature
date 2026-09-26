@@ -26,7 +26,7 @@
 - Files: `src/customer_search/search_service.py` (rama `EMPTY_QUERY` / `NO_RESULTS`), `src/customer_search/messages.py` (mensaje fijo de "sin resultados"), `tests/test_search_service.py` (casos añadidos).
 - Acceptance: AC-06 y AC-07 de SPEC.md pasan (consulta solo de espacios devuelve `EMPTY_QUERY` sin invocar al repositorio; consulta sin coincidencias devuelve `NO_RESULTS` con el mensaje definido); ningún caso lanza excepción.
 - Verification: `pytest tests/test_search_service.py -v -k "empty or no_results"`; corresponde a TS-06, TS-07.
-- Status: Not started
+- Status: Completed
 
 ## T-05 Tests
 - Goal: Completar la cobertura de pruebas: interfaz (CLI o API) y latencia (NFR-01), integrando lo construido en T-02 a T-04.

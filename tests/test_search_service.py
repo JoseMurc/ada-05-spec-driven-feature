@@ -1,6 +1,7 @@
 """Tests for SearchService search logic and acceptance criteria."""
 
 import dataclasses
+from customer_search.messages import NO_RESULTS_MESSAGE
 from customer_search.models import Customer
 from customer_search.repository import CustomerRepository
 from customer_search.search_service import CustomerView, SearchResult, SearchService
@@ -151,3 +152,38 @@ def test_ac13_ranking_and_tie_breaking():
     # 4. C-21: Prefix match ("Leonor Cruz", alphabetical after "Leonardo Paz")
     # 5. C-30: Substring match ("Valeria Galeote")
     assert ids == ["C-10", "C-20", "C-22", "C-21", "C-30"]
+
+
+class SpyRepository(CustomerRepository):
+    """Repository that tracks whether find_all was invoked."""
+
+    def __init__(self) -> None:
+        self.called = False
+
+    def find_all(self) -> list[Customer]:
+        self.called = True
+        return []
+
+
+def test_ac06_empty_query_does_not_call_repository():
+    spy_repo = SpyRepository()
+    service = SearchService(repository=spy_repo)
+
+    for empty_input in ["", "   ", "\t  \n  "]:
+        res = service.search(empty_input)
+        assert res.status == "EMPTY_QUERY"
+        assert res.items == []
+        assert res.total == 0
+        assert res.message is None
+        assert spy_repo.called is False
+
+
+def test_ac07_no_results_returns_empty_list_and_fixed_message():
+    service = SearchService()  # Uses full dataset
+
+    res = service.search("nonexistent_customer_query_xyz_999")
+    assert res.status == "NO_RESULTS"
+    assert res.items == []
+    assert res.total == 0
+    assert res.message == NO_RESULTS_MESSAGE
+

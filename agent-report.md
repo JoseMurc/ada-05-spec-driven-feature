@@ -66,6 +66,17 @@ Tests:
 - `pytest tests/test_normalization.py tests/test_search_service.py -v -k "not empty and not no_results"` (12 passed).
 - `pytest -v` (18 passed across full test suite).
 
+### T-04 
+What the agent did:
+- Implemented `messages.py` defining fixed `NO_RESULTS_MESSAGE` per FR-06, Q-11, A-08, and EH-02.
+- Updated `search_service.py` to populate `message=NO_RESULTS_MESSAGE` when no matching customers are found (`NO_RESULTS`).
+- Ensured empty or whitespace-only queries immediately return `EMPTY_QUERY` with empty items and no repository query (EH-01, SR-05, AC-06).
+- Added unit tests in `tests/test_search_service.py` covering AC-06 (`EMPTY_QUERY` without calling repository) and AC-07 (`NO_RESULTS` returning empty items, total=0, and the fixed message).
+Human review: Pending human review.
+Tests:
+- `pytest tests/test_search_service.py -v -k "empty or no_results"` (2 passed).
+- `pytest -v` (20 passed across full test suite).
+
 ## Problems Encountered 
  
 ## Human Interventions 

@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 from typing import Optional
 
+from customer_search.messages import NO_RESULTS_MESSAGE
 from customer_search.models import Customer
 from customer_search.normalization import normalize_query, normalize_text
 from customer_search.repository import CustomerRepository
@@ -75,7 +76,7 @@ class SearchService:
                 matched.append((tier, customer))
 
         if not matched:
-            return SearchResult(items=[], total=0, status="NO_RESULTS", message=None)
+            return SearchResult(items=[], total=0, status="NO_RESULTS", message=NO_RESULTS_MESSAGE)
 
         # Deterministic sorting (SR-07):
         # 1. Match priority tier (1: exact, 2: prefix, 3: substring)
