@@ -45,9 +45,15 @@ Tests:
 - Ran `pytest -v`, confirming collection completed with 0 collection errors. 
  
 ### T-02 
-What the agent did: 
-Human review: 
-Tests: 
+What the agent did:
+- Implemented `Customer` entity in `src/customer_search/models.py` exposing `cliente_id`, `nombre`, and `email` per SPEC.md Domain Model.
+- Implemented `CustomerRepository` in `src/customer_search/repository.py` with `find_all()` reading JSON customer data without filtering, sorting, or normalizing.
+- Implemented unit tests in `tests/test_models.py` covering model creation, attribute accessibility, equality, and missing field validation.
+- Implemented unit tests in `tests/test_repository.py` verifying seed dataset loading (1,000 customers), empty dataset handling, and order/content preservation.
+Human review: Pending human review.
+Tests:
+- `pytest tests/test_models.py tests/test_repository.py -v` (6 passed).
+- `pytest -v` (6 passed across test suite). 
  
 ## Problems Encountered 
  

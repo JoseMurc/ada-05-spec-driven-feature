@@ -12,7 +12,7 @@
 - Files: `src/customer_search/models.py`, `src/customer_search/repository.py`, `tests/test_models.py`, `tests/test_repository.py`.
 - Acceptance: `Customer` expone `cliente_id`, `nombre`, `email` (SPEC.md Domain Model). `CustomerRepository.find_all()` lee `data/customers.json` y devuelve todos los registros sin filtrar, ordenar ni normalizar.
 - Verification: `pytest tests/test_models.py tests/test_repository.py -v`; el conteo de registros devueltos coincide con el dataset semilla.
-- Status: Not started
+- Status: Completed
 
 ## T-03 Search logic
 - Goal: Implementar normalización y las reglas de coincidencia, orden, truncamiento y proyección de campos (SR-01, SR-02, SR-03, SR-04, SR-06, SR-07, SR-08, SR-09).
