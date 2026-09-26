@@ -5,7 +5,7 @@
 - Files: `pyproject.toml` (o `setup.cfg`), `src/customer_search/__init__.py`, `tests/__init__.py`, `data/customers.json` (dataset semilla, ≤ 1 000 clientes, C-08).
 - Acceptance: El paquete `customer_search` es importable; `data/customers.json` contiene registros válidos con `cliente_id`, `nombre`, `email`.
 - Verification: `pytest -v` corre sin errores de recolección (0 tests aún es válido); `python -c "import customer_search"` no falla.
-- Status: Not started
+- Status: Completed
 
 ## T-02 Domain model
 - Goal: Implementar la entidad `Customer` y el `CustomerRepository` (Domain Model e Interfaces de ARCHITECTURE.md), sin reglas de búsqueda.
