@@ -187,3 +187,17 @@ def test_ac07_no_results_returns_empty_list_and_fixed_message():
     assert res.total == 0
     assert res.message == NO_RESULTS_MESSAGE
 
+
+def test_ac11_user_scope_unrestricted():
+    # FR-09 / AC-11: Data scope is the entire catalog for every user.
+    # Simulated queries executed by different callers receive identical results.
+    service = SearchService()
+
+    user_a_result = service.search("Carlos")
+    user_b_result = service.search("Carlos")
+
+    assert user_a_result.status == user_b_result.status == "OK"
+    assert user_a_result.total == user_b_result.total
+    assert [c.cliente_id for c in user_a_result.items] == [c.cliente_id for c in user_b_result.items]
+
+

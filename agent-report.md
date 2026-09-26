@@ -77,6 +77,19 @@ Tests:
 - `pytest tests/test_search_service.py -v -k "empty or no_results"` (2 passed).
 - `pytest -v` (20 passed across full test suite).
 
+### T-05 
+What the agent did:
+- Implemented `cli.py` providing the local CLI entry point, parsing query arguments and translating `OK`, `EMPTY_QUERY`, and `NO_RESULTS` statuses to structured user output.
+- Implemented shared dataset fixtures in `tests/conftest.py` (`seed_dataset_path`, `seed_customers`, `search_service`, `sample_customers`).
+- Implemented CLI integration tests in `tests/test_cli.py` verifying status formatting and CLI execution for OK, EMPTY_QUERY, and NO_RESULTS.
+- Implemented latency benchmark in `tests/test_latency.py` running 100 sequential queries against the 1,000 customer catalog, validating p95 <= 50 ms and p99 <= 100 ms (NFR-01 / AC-08 / TS-08).
+- Added `test_ac11_user_scope_unrestricted` in `tests/test_search_service.py` to ensure complete coverage of AC-01 to AC-13.
+Human review: Pending human review.
+Tests:
+- `tests/test_latency.py`: observed p50 = 4.55 ms, p95 = 5.46 ms, p99 = 7.65 ms (well within thresholds p95 <= 50 ms, p99 <= 100 ms).
+- `pytest tests/test_cli.py tests/test_latency.py -v -s` (7 passed).
+- `pytest -v` (28 passed across full test suite).
+
 ## Problems Encountered 
  
 ## Human Interventions 

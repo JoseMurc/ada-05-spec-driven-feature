@@ -33,7 +33,7 @@
 - Files: `src/customer_search/cli.py` (o `api.py`, según ARCHITECTURE.md), `tests/test_cli.py` (o `test_api.py`), `tests/test_latency.py`, `tests/conftest.py` (fixtures del dataset).
 - Acceptance: AC-08 pasa (p95 ≤ 50 ms, p99 ≤ 100 ms sobre 1 000 clientes, carga secuencial); la interfaz traduce correctamente cada `status` (`OK`, `EMPTY_QUERY`, `NO_RESULTS`) a su salida; suite completa de SPEC.md (AC-01 a AC-13) pasa en verde.
 - Verification: `pytest -v` (suite completa) sin fallos; `tests/test_latency.py` reporta p50/p95/p99 y valida el umbral; corresponde a TS-08 y a la verificación end-to-end de TS-01 a TS-13.
-- Status: Not started
+- Status: Completed
 
 ## T-06 Documentation
 - Goal: Dejar trazabilidad y documentación de uso, sin modificar REQUIREMENTS.md, SPEC.md ni ARCHITECTURE.md.
