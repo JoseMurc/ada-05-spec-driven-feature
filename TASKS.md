@@ -19,7 +19,7 @@
 - Files: `src/customer_search/normalization.py`, `src/customer_search/search_service.py` (clases `SearchService`, `SearchResult`, `CustomerView`), `tests/test_normalization.py`, `tests/test_search_service.py`.
 - Acceptance: AC-01, AC-02, AC-03, AC-04, AC-05, AC-09, AC-10, AC-12, AC-13 de SPEC.md pasan (unión sin duplicados, subcadena en cualquier posición, insensibilidad a mayúsculas/diacríticos, equivalencia por espacios, truncamiento a 50 con total correcto, orden determinista, proyección a la lista blanca).
 - Verification: `pytest tests/test_normalization.py tests/test_search_service.py -v -k "not empty and not no_results"`; corresponde a TS-01, TS-02, TS-03, TS-04, TS-05, TS-09, TS-10, TS-12, TS-13.
-- Status: Not started
+- Status: Completed
 
 ## T-04 Validation and errors
 - Goal: Implementar el manejo de consulta vacía y consulta sin resultados (SR-05, EH-01, EH-02), incluyendo el mensaje fijo de "sin resultados".

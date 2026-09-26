@@ -55,6 +55,17 @@ Tests:
 - `pytest tests/test_models.py tests/test_repository.py -v` (6 passed).
 - `pytest -v` (6 passed across test suite). 
  
+### T-03 
+What the agent did:
+- Implemented `normalization.py` with `remove_diacritics`, `normalize_text`, and `normalize_query` (handling NFKD diacritic removal, lowercase conversion, and query trimming preserving internal spaces).
+- Implemented `search_service.py` defining `CustomerView`, `SearchResult`, and `SearchService`.
+- Implemented search matching rules: union across name and email (SR-01), substring matching in any position (SR-02), normalization of query and fields (SR-03), whitespace trim on query (SR-04), truncation to 50 with real total count (SR-06), deterministic ordering with tier priority (exact, prefix, substring), alphabetical name sort, and customer ID tie-breaker (SR-07), full catalog scope (SR-08), and projection to CustomerView whitelist (SR-09).
+- Implemented tests in `tests/test_normalization.py` and `tests/test_search_service.py` covering acceptance criteria AC-01, AC-02, AC-03, AC-04, AC-05, AC-09, AC-10, AC-12, AC-13.
+Human review: Pending human review.
+Tests:
+- `pytest tests/test_normalization.py tests/test_search_service.py -v -k "not empty and not no_results"` (12 passed).
+- `pytest -v` (18 passed across full test suite).
+
 ## Problems Encountered 
  
 ## Human Interventions 
