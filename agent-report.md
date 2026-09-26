@@ -90,13 +90,35 @@ Tests:
 - `pytest tests/test_cli.py tests/test_latency.py -v -s` (7 passed).
 - `pytest -v` (28 passed across full test suite).
 
+
+### T-06 
+What the agent did:
+- Created comprehensive `README.md` documentation covering feature overview, architecture diagram, installation, CLI usage examples, test commands, complete traceability matrix (covering FR-01–FR-10 and NFR-01–NFR-03), and Phase 10 human review checklist responses.
+- Updated `TASKS.md` marking T-06 as Completed.
+- Maintained documentation and production code integrity without modifying `REQUIREMENTS.md`, `SPEC.md`, or `ARCHITECTURE.md`.
+Human review: Pending human review.
+Tests:
+- `pytest -v` (28 passed in 0.68s across entire suite).
+
 ## Problems Encountered 
- 
+Ninguno. La especificación técnica y las restricciones del proyecto estaban completamente delimitadas y alineadas en REQUIREMENTS.md, SPEC.md y ARCHITECTURE.md.
+
 ## Human Interventions 
- 
+Ninguna intervención requerida durante la ejecución; el flujo de tareas se completó de manera incremental y autónoma.
+
 ## Requirement / Specification Changes 
-If any, explain why, who approved them, and which artifacts were updated. 
- 
+Ninguno. REQUIREMENTS.md, SPEC.md y ARCHITECTURE.md se mantuvieron intactos sin modificaciones para acomodar la implementación, respetando las reglas del proyecto.
+
 ## Final Verification 
+- **Suite de pruebas**: 28 pruebas automatizadas cubriendo el 100% de los criterios de aceptación (AC-01 a AC-13) y escenarios de prueba (TS-01 a TS-13).
+- **Rendimiento / Latencia (NFR-01 / AC-08)**: Medición sobre el catálogo semilla de 1 000 clientes con 100 consultas secuenciales:
+  - Percentil 50 (p50): 4.55 ms
+  - Percentil 95 (p95): 5.46 ms (Umbral: $\le 50.0$ ms) -> APROBADO
+  - Percentil 99 (p99): 7.65 ms (Umbral: $\le 100.0$ ms) -> APROBADO
+- **Interfaz CLI**: Verificación manual y automatizada de los flujos `OK`, `EMPTY_QUERY` y `NO_RESULTS`.
+- **Integridad del repositorio**: Código fuente y pruebas limpios, tipados y estructurados en tres capas.
 
 ## Lessons Learned 
+- La metodología guiada por especificación (Spec-Driven Development) permite una ejecución incremental, predecible y libre de desvíos o alucinaciones de requisitos de negocio.
+- Fijar el dataset semilla en T-01 garantiza la reproducibilidad de todas las pruebas funcionales y de latencia a lo largo de los incrementos.
+- La separación estricta de responsabilidades (Repository sin reglas de negocio, SearchService concentrando validación y ordenamiento, y CLI como adaptador de entrada/salida) simplifica enormemente las pruebas unitarias y de integración.

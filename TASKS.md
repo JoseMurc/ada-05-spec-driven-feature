@@ -40,4 +40,4 @@
 - Files: `README.md` (cómo ejecutar la interfaz y los tests), tabla de trazabilidad (Requirement -> SPEC/AC -> Task -> Files -> Test -> Status; puede vivir en `README.md` o en un archivo aparte).
 - Acceptance: La tabla de trazabilidad cubre FR-01 a FR-10 y NFR-01 a NFR-03, cada uno con su AC, tarea, archivo y estado de prueba; el checklist de revisión humana de la Fase 10 (¿cumple REQUIREMENTS/SPEC?, ¿SPEC referencia sin redefinir?, ¿se inventaron reglas?, ¿ARCHITECTURE coincide con el código?) queda respondido.
 - Verification: Revisión manual contra el checklist de la Fase 10; `pytest -v` sigue en verde tras cualquier ajuste de documentación (no debe tocar código de producción).
-- Status: Not started
+- Status: Completed
