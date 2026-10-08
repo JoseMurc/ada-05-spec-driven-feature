@@ -15,8 +15,11 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "query",
         nargs="?",
-        default="",
-        help="Search query to match against customer name or email.",
+        default=None,
+        help=(
+            "Search query to match against customer name or email. "
+            "If omitted, an interactive session is started."
+        ),
     )
     return parser
 
@@ -47,6 +50,9 @@ def format_output(result) -> str:
 def main(argv: Optional[Sequence[str]] = None, service: Optional[SearchService] = None) -> int:
     """CLI entry point.
 
+    Without a query argument, starts the interactive session (FR-11, SR-10);
+    with a query argument, runs a one-shot search (FR-15).
+
     Args:
         argv: Command-line arguments. Defaults to sys.argv[1:].
         service: Optional SearchService instance for dependency injection.
@@ -58,6 +64,14 @@ def main(argv: Optional[Sequence[str]] = None, service: Optional[SearchService] 
     args = parser.parse_args(argv if argv is not None else sys.argv[1:])
 
     search_service = service or SearchService()
+
+    if args.query is None:
+        # Imported here: session.py imports format_output from this module.
+        from customer_search.session import InteractiveSession
+
+        InteractiveSession(service=search_service).run()
+        return 0
+
     result = search_service.search(args.query)
 
     output = format_output(result)
