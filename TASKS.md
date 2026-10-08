@@ -41,3 +41,24 @@
 - Acceptance: La tabla de trazabilidad cubre FR-01 a FR-10 y NFR-01 a NFR-03, cada uno con su AC, tarea, archivo y estado de prueba; el checklist de revisión humana de la Fase 10 (¿cumple REQUIREMENTS/SPEC?, ¿SPEC referencia sin redefinir?, ¿se inventaron reglas?, ¿ARCHITECTURE coincide con el código?) queda respondido.
 - Verification: Revisión manual contra el checklist de la Fase 10; `pytest -v` sigue en verde tras cualquier ajuste de documentación (no debe tocar código de producción).
 - Status: Completed
+
+## T-07 Interactive session controller
+- Goal: Implementar la clase `InteractiveSession` en `src/customer_search/session.py` con constantes `WELCOME_BANNER` y `EXIT_COMMANDS`, métodos `is_exit_command`, `handle_input` y `run()`, admitiendo inyección de dependencias para `service`, `input_fn` y `output_fn`.
+- Files: `src/customer_search/session.py`, `tests/test_session.py`.
+- Acceptance: Cumple SR-11, SR-12, SR-13, SR-14, VR-04, EH-05 y cubre AC-15, AC-16, AC-17, AC-18, AC-19 de `SPEC.md`. El banner muestra "Bienvenido a buscador de clientes" y las instrucciones de salida (`:salir` y `:exit`). El prompt fijo `"Buscar cliente: "` solicita términos repetidamente. Las consultas válidas ejecutan la búsqueda y muestran resultados formateados. Ante `EMPTY_QUERY` o `NO_RESULTS`, muestra el mensaje correspondiente y mantiene activa la sesión. Los comandos `:salir` y `:exit` (con o sin espacios, e insensibles a mayúsculas/minúsculas) finalizan la sesión sin consultar el repositorio. Se capturan limpiamente `KeyboardInterrupt` y `EOFError` sin lanzar excepciones no controladas.
+- Verification: `pytest tests/test_session.py -v` pasa al 100%; corresponde a TS-15, TS-16, TS-17, TS-18 y TS-19.
+- Status: Completed
+
+## T-08 CLI dispatcher integration
+- Goal: Modificar `src/customer_search/cli.py` para distinguir entre la invocación con argumentos y la invocación sin argumentos, delegando en `InteractiveSession` cuando no se reciban argumentos.
+- Files: `src/customer_search/cli.py`, `tests/test_cli.py`.
+- Acceptance: Cumple SR-10, FR-11, FR-15 y cubre AC-14 de `SPEC.md`. `build_parser()` configura el argumento `query` con `default=None`. `main()` sin argumentos (`args.query is None`) instancia y ejecuta `InteractiveSession(service=search_service).run()`. `main(["<query>"])` con argumento conserva inalterado el comportamiento existente de un solo disparo.
+- Verification: `pytest tests/test_cli.py -v` pasa al 100%; corresponde a TS-14 y regresión de casos existentes de CLI.
+- Status: Completed
+
+## T-09 Traceability and documentation update
+- Goal: Actualizar la documentación y la matriz de trazabilidad para registrar los nuevos requisitos FR-11 a FR-15 y su cobertura de pruebas y tareas.
+- Files: `docs/Traceability.md`, `README.md`, `ARCHITECTURE.md`, `REQUIREMENTS.md`, `RESEARCH.md`, `SPEC.md` and `TASKS.md`.
+- Acceptance: La matriz de trazabilidad en `docs/Traceability.md` incluye FR-11 a FR-15 vinculados con SR-10 a SR-14, VR-04, EH-05, AC-14 a AC-19, T-07 y T-08. `README.md` documenta el uso interactivo de la CLI sin argumentos.
+- Verification: Revisión manual de consistencia entre `REQUIREMENTS.md`, `SPEC.md`, `ARCHITECTURE.md`, `TASKS.md`, `docs/Traceability.md` y `README.md`; `pytest -v` pasa en toda la suite.
+- Status: Completed
