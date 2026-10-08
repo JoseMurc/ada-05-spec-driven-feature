@@ -233,3 +233,23 @@ def test_default_session_initialization():
     assert isinstance(session.service, SearchService)
     assert session.input_fn is input
     assert session.output_fn is print
+
+
+def test_default_session_uses_real_builtin_input(monkeypatch, capsys):
+    """Verify the default session reads from builtins.input at runtime (AC-16, AC-18)."""
+    prompts: List[str] = []
+    inputs = iter(["carlos", ":salir"])
+
+    def fake_input(prompt: str) -> str:
+        prompts.append(prompt)
+        return next(inputs)
+
+    monkeypatch.setattr("builtins.input", fake_input)
+
+    session = InteractiveSession()
+    session.run()
+
+    assert prompts == [PROMPT, PROMPT]
+    stdout = capsys.readouterr().out
+    assert WELCOME_BANNER in stdout
+    assert "Total de coincidencias:" in stdout

@@ -21,8 +21,8 @@ class InteractiveSession:
     def __init__(
         self,
         service: Optional[SearchService] = None,
-        input_fn: Callable[[str], str] = input,
-        output_fn: Callable[[str], None] = print,
+        input_fn: Optional[Callable[[str], str]] = None,
+        output_fn: Optional[Callable[[str], None]] = None,
     ) -> None:
         """Initialize InteractiveSession with injectable service and I/O callables.
 
@@ -30,10 +30,13 @@ class InteractiveSession:
             service: Optional SearchService instance. Defaults to new SearchService.
             input_fn: Callable prompting user for input. Defaults to builtins.input.
             output_fn: Callable writing output string. Defaults to builtins.print.
+
+        Defaults are resolved at construction time (not at function definition
+        time) so the real builtins in effect when the session is created are used.
         """
         self.service = service or SearchService()
-        self.input_fn = input_fn
-        self.output_fn = output_fn
+        self.input_fn = input_fn if input_fn is not None else input
+        self.output_fn = output_fn if output_fn is not None else print
 
     def is_exit_command(self, text: str) -> bool:
         """Check if text is an explicit exit command (VR-04, A-12).
