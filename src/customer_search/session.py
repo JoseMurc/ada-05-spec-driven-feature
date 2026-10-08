@@ -2,12 +2,13 @@
 
 from typing import Callable, Optional
 
-from customer_search.cli import format_output
+from customer_search.formatting import format_output
 from customer_search.search_service import SearchService
 
 WELCOME_BANNER: str = (
     "Bienvenido a buscador de clientes\n"
-    "Comandos de salida disponibles: :salir, :exit (o Ctrl+C / Ctrl+D)"
+    "Comandos de salida disponibles: :salir, :exit "
+    "(también Ctrl+C, o fin de archivo: Ctrl+D en Linux/macOS, Ctrl+Z + Enter en Windows)"
 )
 
 EXIT_COMMANDS: set[str] = {":salir", ":exit"}

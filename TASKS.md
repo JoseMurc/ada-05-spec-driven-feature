@@ -58,6 +58,7 @@
 
 ## T-09 Traceability and documentation update
 - Goal: Actualizar la documentación y la matriz de trazabilidad para registrar los nuevos requisitos FR-11 a FR-15 y su cobertura de pruebas y tareas.
+- Note: La restricción de T-06 ("sin modificar REQUIREMENTS.md, SPEC.md ni ARCHITECTURE.md") aplicaba al incremento FR-01–FR-10. Este incremento introduce requisitos nuevos (FR-11 a FR-15), por lo que T-09 sí actualiza esos documentos de forma explícita; la actualización se limita a agregar los requisitos, reglas y componentes nuevos sin redefinir los existentes.
 - Files: `docs/Traceability.md`, `README.md`, `ARCHITECTURE.md`, `REQUIREMENTS.md`, `RESEARCH.md`, `SPEC.md` and `TASKS.md`.
 - Acceptance: La matriz de trazabilidad en `docs/Traceability.md` incluye FR-11 a FR-15 vinculados con SR-10 a SR-14, VR-04, EH-05, AC-14 a AC-19, T-07 y T-08. `README.md` documenta el uso interactivo de la CLI sin argumentos.
 - Verification: Revisión manual de consistencia entre `REQUIREMENTS.md`, `SPEC.md`, `ARCHITECTURE.md`, `TASKS.md`, `docs/Traceability.md` y `README.md`; `pytest -v` pasa en toda la suite.

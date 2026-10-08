@@ -4,7 +4,11 @@ import argparse
 import sys
 from typing import Optional, Sequence
 
+from customer_search.formatting import format_output
 from customer_search.search_service import SearchService
+from customer_search.session import InteractiveSession
+
+__all__ = ["build_parser", "format_output", "main"]
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -22,29 +26,6 @@ def build_parser() -> argparse.ArgumentParser:
         ),
     )
     return parser
-
-
-def format_output(result) -> str:
-    """Format SearchResult into user-facing text output.
-
-    Translates each status (OK, EMPTY_QUERY, NO_RESULTS) into the appropriate
-    channel presentation.
-    """
-    if result.status == "EMPTY_QUERY":
-        return "Consulta vacía. Ingrese un término de búsqueda para consultar clientes."
-
-    if result.status == "NO_RESULTS":
-        return result.message or "No se encontraron clientes."
-
-    # Status: OK
-    lines = [
-        f"Total de coincidencias: {result.total}",
-        f"Mostrando {len(result.items)} resultados:",
-        "-" * 40,
-    ]
-    for item in result.items:
-        lines.append(f"[{item.cliente_id}] {item.nombre} <{item.email}>")
-    return "\n".join(lines)
 
 
 def main(argv: Optional[Sequence[str]] = None, service: Optional[SearchService] = None) -> int:
@@ -66,9 +47,6 @@ def main(argv: Optional[Sequence[str]] = None, service: Optional[SearchService] 
     search_service = service or SearchService()
 
     if args.query is None:
-        # Imported here: session.py imports format_output from this module.
-        from customer_search.session import InteractiveSession
-
         InteractiveSession(service=search_service).run()
         return 0
 

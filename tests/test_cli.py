@@ -97,7 +97,7 @@ class _SpyService:
 @pytest.fixture
 def spy_session(monkeypatch):
     _SpySession.instances = []
-    monkeypatch.setattr("customer_search.session.InteractiveSession", _SpySession)
+    monkeypatch.setattr("customer_search.cli.InteractiveSession", _SpySession)
     return _SpySession
 
 
@@ -144,6 +144,19 @@ def test_ac14_main_with_whitespace_arg_stays_one_shot(spy_session, monkeypatch):
     assert exit_code == 0
     assert spy_session.instances == []
     assert "vacía" in captured.getvalue().lower()
+
+
+def test_ac14_main_with_explicit_empty_arg_stays_one_shot(spy_session, monkeypatch):
+    """An explicit empty argument is a one-shot EMPTY_QUERY, not an interactive session (FR-15)."""
+    captured = StringIO()
+    monkeypatch.setattr("sys.stdout", captured)
+    service = _SpyService()
+
+    exit_code = main([""], service=service)
+
+    assert exit_code == 0
+    assert spy_session.instances == []
+    assert service.queries == [""]
 
 
 def test_ac14_main_without_args_runs_real_session_until_eof(monkeypatch):

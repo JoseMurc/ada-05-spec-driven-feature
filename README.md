@@ -17,7 +17,7 @@ flowchart LR
     C --> D[("Customer Data<br/>data/customers.json")]
 ```
 
-- **CLI (`customer_search.cli`)**: Punto de entrada de línea de comandos y despachador. Con un argumento ejecuta una búsqueda de un solo disparo (FR-15); sin argumentos inicia la sesión interactiva (FR-11). Formatea la salida de resultados y estados (`OK`, `EMPTY_QUERY`, `NO_RESULTS`).
+- **CLI (`customer_search.cli`)**: Punto de entrada de línea de comandos y despachador. Con un argumento ejecuta una búsqueda de un solo disparo (FR-15); sin argumentos inicia la sesión interactiva (FR-11). La salida de resultados y estados (`OK`, `EMPTY_QUERY`, `NO_RESULTS`) se formatea en `customer_search.formatting`, compartido con la sesión interactiva.
 - **InteractiveSession (`customer_search.session`)**: Controlador de la sesión interactiva (REPL). Muestra el banner de bienvenida con los comandos de salida, solicita consultas con el prompt `Buscar cliente: `, permanece activa ante `EMPTY_QUERY`/`NO_RESULTS` y finaliza con `:salir`, `:exit`, Ctrl+C o fin de archivo (FR-12 a FR-14).
 - **Search Service (`customer_search.search_service`)**: Concentra toda la lógica de negocio:
   - Normalización de texto y eliminación de diacríticos (`customer_search.normalization`).
@@ -79,7 +79,7 @@ python -m customer_search.cli
 
 ```text
 Bienvenido a buscador de clientes
-Comandos de salida disponibles: :salir, :exit (o Ctrl+C / Ctrl+D)
+Comandos de salida disponibles: :salir, :exit (también Ctrl+C, o fin de archivo: Ctrl+D en Linux/macOS, Ctrl+Z + Enter en Windows)
 Buscar cliente: carlos
 Total de coincidencias: 41
 Mostrando 41 resultados:

@@ -20,6 +20,11 @@ NFR-02 y NFR-03 están marcados como "No aplica en esta entrega" en REQUIREMENTS
 - Ordenamiento determinista con desempate por cliente_id (FR-08).
 - Alcance de datos único (catálogo completo) para cualquier usuario buscador (FR-09).
 - Lista blanca de campos en la respuesta: cliente_id, nombre, email (FR-10).
+- Sesión interactiva al invocar la CLI sin argumentos, con consultas repetidas sobre la misma lógica de búsqueda (FR-11).
+- Banner de bienvenida con instrucciones de los comandos de salida (FR-12).
+- Permanencia de la sesión tras `EMPTY_QUERY` o `NO_RESULTS` (FR-13).
+- Finalización de la sesión por `:salir`/`:exit` o por interrupción/fin de archivo de la terminal (FR-14, A-12).
+- Preservación de la invocación de un solo disparo con argumento (FR-15).
 
 ## Out of Scope 
 
@@ -116,4 +121,4 @@ Storage: persistencia en memoria o archivo JSON local (C-02). La estructura de i
 - C-04: limita la entrega a interfaz local (CLI o API HTTP local); justifica que NFR-04 y NFR-05 no apliquen.
  
 ## Open Questions 
-N/A — todas las decisiones necesarias para FR-01–FR-10 y NFR-01–NFR-03 ya están resueltas en REQUIREMENTS.md (Q-01 a Q-16). No quedan preguntas abiertas dentro del alcance de este incremento.
+N/A — todas las decisiones necesarias para FR-01–FR-15 y NFR-01–NFR-03 ya están resueltas en REQUIREMENTS.md (Q-01 a Q-16 y A-12 para los comandos de salida de la sesión interactiva). No quedan preguntas abiertas dentro del alcance de este incremento.

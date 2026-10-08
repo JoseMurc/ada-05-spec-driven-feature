@@ -18,6 +18,7 @@ flowchart LR
 
 ## Components 
 - **CLI (`customer_search.cli`)**: punto de entrada local y despachador. Parsea argumentos de entrada; si recibe una consulta ejecuta la búsqueda de un solo disparo; si no recibe argumentos, inicia la sesión interactiva (FR-11, FR-15).
+- **Formatting (`customer_search.formatting`)**: función `format_output` de la capa de presentación que traduce cada `SearchResult` (`OK`, `EMPTY_QUERY`, `NO_RESULTS`) a texto. La comparten la CLI y `InteractiveSession`, de modo que ninguno de los dos módulos depende del otro para formatear.
 - **InteractiveSession (`customer_search.session`)**: controlador de sesión interactiva. Gestiona el ciclo REPL en terminal: muestra el banner de bienvenida con instrucciones de salida (`:salir`, `:exit`), solicita entradas repetidas con el prompt `"Buscar cliente: "`, filtra comandos de salida y señales de terminal (`KeyboardInterrupt`, `EOFError`), e invoca al `SearchService` mostrando resultados formateados sin abortar la sesión (FR-11 a FR-14, SR-10 a SR-14).
 - **Search Service (`customer_search.search_service`)**: aplica normalización, coincidencia, orden, truncamiento y proyección de campos. Es el único componente con reglas de negocio.
 - **Repository (`customer_search.repository`)**: expone el catálogo completo de clientes al Search Service, sin conocer reglas de búsqueda.
@@ -25,6 +26,7 @@ flowchart LR
  
 ## Responsibilities 
 - **CLI (`cli.py`)**: parsear argumentos mediante `argparse`, detectar presencia/ausencia de consulta, despachar a búsqueda de un solo disparo o delegar en `InteractiveSession.run()`.
+- **Formatting (`formatting.py`)**: presentar `SearchResult` como texto (`format_output`); sin reglas de negocio.
 - **InteractiveSession (`session.py`)**: ciclo REPL (SR-10, SR-12), banner e instrucciones de salida (SR-11), validación de comandos `:salir` y `:exit` (VR-04, SR-14, A-12), captura limpia de interrupciones de terminal (EH-05), invocación a `SearchService.search` y presentación de resultados preservando la sesión ante `EMPTY_QUERY` y `NO_RESULTS` (SR-13).
 - **Search Service**: SR-01 a SR-09 (unión sin duplicados, subcadena, normalización, trim, consulta vacía, truncamiento a 50, orden con desempate, alcance único, proyección de campos), EH-01 y EH-02 (consulta vacía y sin resultados).
 - **Repository**: `find_all()` sobre Customer Data; no filtra, no ordena, no normaliza.
@@ -39,7 +41,7 @@ flowchart LR
 5. Search Service normaliza consulta y campos (SR-03), filtra por subcadena (SR-02) en nombre y email, y deduplica por `cliente_id` (SR-01).
 6. Search Service ordena (SR-07) y trunca a 50 con total informado (SR-06).
 7. Search Service proyecta cada resultado a {cliente_id, nombre, email} (SR-09); si el conjunto es vacío aplica EH-02, poblando `status = "NO_RESULTS"` y `message` con la constante del servicio.
-8. La CLI recibe el resultado, formatea la salida con `format_output` y finaliza con código 0.
+8. La CLI recibe el resultado, formatea la salida con `format_output` (`formatting.py`) y finaliza con código 0.
 
 **2. Modo interactivo (sin argumentos, FR-11 a FR-14):**
 1. El usuario ejecuta `python -m customer_search.cli` sin argumentos.
