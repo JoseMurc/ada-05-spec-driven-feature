@@ -4,7 +4,11 @@ import argparse
 import sys
 from typing import Optional, Sequence
 
+from customer_search.formatting import format_output
 from customer_search.search_service import SearchService
+from customer_search.session import InteractiveSession
+
+__all__ = ["build_parser", "format_output", "main"]
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -15,37 +19,20 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "query",
         nargs="?",
-        default="",
-        help="Search query to match against customer name or email.",
+        default=None,
+        help=(
+            "Search query to match against customer name or email. "
+            "If omitted, an interactive session is started."
+        ),
     )
     return parser
 
 
-def format_output(result) -> str:
-    """Format SearchResult into user-facing text output.
-
-    Translates each status (OK, EMPTY_QUERY, NO_RESULTS) into the appropriate
-    channel presentation.
-    """
-    if result.status == "EMPTY_QUERY":
-        return "Consulta vacía. Ingrese un término de búsqueda para consultar clientes."
-
-    if result.status == "NO_RESULTS":
-        return result.message or "No se encontraron clientes."
-
-    # Status: OK
-    lines = [
-        f"Total de coincidencias: {result.total}",
-        f"Mostrando {len(result.items)} resultados:",
-        "-" * 40,
-    ]
-    for item in result.items:
-        lines.append(f"[{item.cliente_id}] {item.nombre} <{item.email}>")
-    return "\n".join(lines)
-
-
 def main(argv: Optional[Sequence[str]] = None, service: Optional[SearchService] = None) -> int:
     """CLI entry point.
+
+    Without a query argument, starts the interactive session (FR-11, SR-10);
+    with a query argument, runs a one-shot search (FR-15).
 
     Args:
         argv: Command-line arguments. Defaults to sys.argv[1:].
@@ -58,6 +45,11 @@ def main(argv: Optional[Sequence[str]] = None, service: Optional[SearchService] 
     args = parser.parse_args(argv if argv is not None else sys.argv[1:])
 
     search_service = service or SearchService()
+
+    if args.query is None:
+        InteractiveSession(service=search_service).run()
+        return 0
+
     result = search_service.search(args.query)
 
     output = format_output(result)

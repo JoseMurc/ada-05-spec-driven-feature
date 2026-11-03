@@ -16,6 +16,11 @@ so that I can quickly find the customer record I need.
 - FR-08: El sistema ordena los resultados por coincidencia exacta, luego por posición del match, con desempate alfabético y por identificador de cliente.
 - FR-09:  El sistema deberá devolver resultados según el alcance de datos autorizado para el usuario buscador; en esta entrega el alcance autorizado es el catálogo completo para todo usuario, sin particiones ni roles.
 - FR-10: El sistema deberá devolver como respuesta únicamente los campos cliente_id, nombre y email; ningún otro campo del modelo de datos se expone en resultados.
+- FR-11: Cuando la CLI se ejecuta sin argumentos, el sistema deberá iniciar una sesión interactiva que solicita términos de búsqueda de forma repetida, ejecuta cada término sobre la lógica de búsqueda existente (FR-01 a FR-10) e imprime sus resultados.
+- FR-12: Al iniciar la sesión interactiva, el sistema deberá mostrar un mensaje de bienvenida y las instrucciones de los comandos de salida disponibles.
+- FR-13: La sesión interactiva deberá permanecer activa tras una consulta con estado EMPTY_QUERY o NO_RESULTS, mostrando el resultado correspondiente (FR-05, FR-06).
+- FR-14: El sistema deberá permitir finalizar la sesión interactiva mediante comandos explícitos de salida o mediante interrupción/fin de archivo de la terminal, sin interpretar esos comandos como términos de búsqueda.
+- FR-15: La invocación de un solo disparo con argumentos (`python -m customer_search.cli "<query>"`) deberá conservar su comportamiento actual.
  
 ## Non-Functional Requirements 
 - NFR-01:El endpoint de búsqueda responde en ≤50 ms en el percentil 95 y ≤100 ms en el percentil 99, bajo una carga sostenida de 1 consultas por segundo, sobre un catálogo de 1000 clientes.
@@ -80,7 +85,6 @@ so that I can quickly find the customer record I need.
 - A-09: El umbral de rendimiento se verifica de forma local y secuencial sobre el dataset acotado, sin carga concurrente declarada.
 - A-10: A-01 a A-09 y A-11 son decisiones tomadas por el desarrollador, que asume el rol de responsable del producto a falta de uno externo, y quedan registradas como tales; un cambio en cualquiera de ellas obliga a revisar los requisitos afectados antes de la especificación y las pruebas.
 - A-11: El mecanismo de acceso a resultados más allá del límite de FR-07 es truncamiento simple con total informado; no se implementa paginación por lotes ni scroll incremental.
-
-
+- A-12: Una línea ingresada en la sesión interactiva es comando de salida solo si, tras eliminar espacios en los extremos, es exactamente `:salir` o `:exit` (insensible a mayúsculas/minúsculas); cualquier otro texto, incluso si contiene esas cadenas, se trata como término de búsqueda. Los comandos no se consideran términos de búsqueda válidos.
 
 Nota: REQUIREMENTS.md es la fuente de la verdad para FR/NFR
