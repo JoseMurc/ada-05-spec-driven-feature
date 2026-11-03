@@ -5,6 +5,7 @@
 - Read SPEC.md before implementing. 
 - Read ARCHITECTURE.md before architectural changes. 
 - Follow TASKS.md. 
+- For PR/branch readiness reviews (before human approval), use the `reviewing-pull-requests` Skill: read `.agents/skills/reviewing-pull-requests/SKILL.md` first, before improvising a review. 
 - Prefer small, focused changes. 
 - Do not invent business requirements. 
 - Do not modify REQUIREMENTS.md or SPEC.md to make tests pass. 
@@ -13,6 +14,7 @@
 - Do not implement behavior for NFR-02 or NFR-03 (authentication, TLS, audit log, rate limiting): they are explicitly out of scope in this delivery (C-05).
 - Do not modify `data/customers.json` outside T-01; it is fixture data, not a place to patch failing tests.
 - Commit after each completed task, referencing the task ID (C-06).
+- Check the `.agents/skills` folder for any skill that could be used according to the prompt made.
  
 ## Validation 
 - Run pytest before and after changes. 

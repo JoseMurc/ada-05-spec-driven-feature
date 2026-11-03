@@ -1,0 +1,52 @@
+[ 
+  { 
+    "id": "trigger_positive_01", 
+    "input": "Review PR #3 and tell me if it is ready for human review.", 
+    "expected_trigger": true 
+  }, 
+  { 
+    "id": "trigger_positive_02", 
+    "input": "Check this pull request against the spec and tests.", 
+    "expected_trigger": true 
+  }, 
+  { 
+    "id": "trigger_positive_03", 
+    "input": "Perform a PR readiness review for the current branch.", 
+    "expected_trigger": true 
+  }, 
+  {
+    "id": "trigger_positive_04",
+    "input": "Is the current branch ready to go to code review, based on REQUIREMENTS.md and the test suite?",
+    "expected_trigger": true
+  },
+  {
+    "id": "trigger_positive_05",
+    "input": "Check the diff of the PR from the `Feat/Controlador-interactivo` branch against `SPEC.md` before anyone approves it",
+    "expected_trigger": true
+  },
+  { 
+    "id": "trigger_negative_01", 
+    "input": "Implement issue #3.", 
+    "expected_trigger": false 
+  }, 
+  { 
+    "id": "trigger_negative_02", 
+    "input": "Merge PR #3.", 
+    "expected_trigger": false 
+  }, 
+  {
+    "id": "trigger_negative_03",
+    "input": "Explain what a pull request is.",
+    "expected_trigger": false
+  },
+  {
+    "id": "trigger_negative_04",
+    "input": "Summarize the commits on this branch for the changelog.",
+    "expected_trigger": false
+  },
+  {
+    "id": "trigger_negative_06",
+    "input": "Fix the failing tests so the PR is ready to merge.",
+    "expected_trigger": false
+  }
+]
