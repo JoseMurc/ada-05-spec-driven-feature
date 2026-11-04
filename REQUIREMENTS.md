@@ -5,86 +5,87 @@ As a user,
 I want to search customers by name or email, 
 so that I can quickly find the customer record I need. 
  
-## Functional Requirements 
-- FR-01: El sistema deberá exponer un único campo de búsqueda que consulta simultáneamente los atributos nombre y email del cliente al usuario, devolviendo la unión de coincidencias sin duplicados.
-- FR-02: El sistema debe devolver coincidencias por subcadena, insensibles a mayúsculas/minúsculas y a diacríticos, aplicadas por igual sobre nombre y email.
-- FR-03: El sistema deberá devolver el mismo conjunto de resultados, en el mismo orden, para términos de búsqueda que difieran únicamente en mayúsculas/minúsculas o en diacríticos (acentos agudos, graves, circunflejos y diéresis).
-- FR-04: El sistema deberá devolver el mismo conjunto de resultados, en el mismo orden, para términos de búsqueda que difieran únicamente en caracteres de espacio en blanco al inicio o al final. 
-- FR-05: El sistema deberá tratar una consulta compuesta únicamente por espacios como consulta vacía, devolviendo un resultado vacío con estado explícito, sin ejecutar búsqueda y sin error. 
-- FR-06: El sistema deberá devolver una lista vacía, un código de estado de negocio NO_RESULTS y un mensaje fijo definido por el sistema cuando la búsqueda no tenga coincidencias.
-- FR-07: La respuesta no contiene más de 50 elementos y siempre incluye el total de coincidencias; el exceso se trunca sin mecanismo de paginación.
-- FR-08: El sistema ordena los resultados por coincidencia exacta, luego por posición del match, con desempate alfabético y por identificador de cliente.
-- FR-09:  El sistema deberá devolver resultados según el alcance de datos autorizado para el usuario buscador; en esta entrega el alcance autorizado es el catálogo completo para todo usuario, sin particiones ni roles.
-- FR-10: El sistema deberá devolver como respuesta únicamente los campos cliente_id, nombre y email; ningún otro campo del modelo de datos se expone en resultados.
-- FR-11: Cuando la CLI se ejecuta sin argumentos, el sistema deberá iniciar una sesión interactiva que solicita términos de búsqueda de forma repetida, ejecuta cada término sobre la lógica de búsqueda existente (FR-01 a FR-10) e imprime sus resultados.
-- FR-12: Al iniciar la sesión interactiva, el sistema deberá mostrar un mensaje de bienvenida y las instrucciones de los comandos de salida disponibles.
-- FR-13: La sesión interactiva deberá permanecer activa tras una consulta con estado EMPTY_QUERY o NO_RESULTS, mostrando el resultado correspondiente (FR-05, FR-06).
-- FR-14: El sistema deberá permitir finalizar la sesión interactiva mediante comandos explícitos de salida o mediante interrupción/fin de archivo de la terminal, sin interpretar esos comandos como términos de búsqueda.
-- FR-15: La invocación de un solo disparo con argumentos (`python -m customer_search.cli "<query>"`) deberá conservar su comportamiento actual.
- 
-## Non-Functional Requirements 
-- NFR-01:El endpoint de búsqueda responde en ≤50 ms en el percentil 95 y ≤100 ms en el percentil 99, bajo una carga sostenida de 1 consultas por segundo, sobre un catálogo de 1000 clientes.
-- NFR-02: No aplica en esta entrega — C-05 excluye sesión, autenticación y TLS en una ejecución local, mono-proceso y mono-usuario. Texto original, aplicable solo si el alcance cambia a un despliegue expuesto en red: "Todo acceso a la búsqueda ocurre sobre TLS 1.2+, requiere sesión autenticada y queda registrado en el log de auditoría con usuario, timestamp, término normalizado y cantidad de resultados, sin almacenar datos personales del cliente en el log."
-- NFR-03: No aplica en esta entrega — C-05 excluye explícitamente la limitación de tasa en una ejecución local mono-usuario. Texto original, aplicable solo si el alcance cambia a un despliegue multiusuario expuesto en red: "El endpoint deberá aplicar limitación de tasa de 60 peticiones por minuto por usuario; al excederse responde HTTP 429 sin revelar información de clientes."
-- NFR-04: No aplica en esta entrega — C-04 excluye toda interfaz web; no existe navegador, SO ni breakpoint que verificar. Texto original, aplicable solo si se agrega una interfaz web: "La interfaz de búsqueda es operable sin pérdida de funcionalidad ni scroll horizontal en los navegadores en cada combinación de navegador/SO/breakpoint."
-- NFR-05: No aplica en esta entrega — C-04 excluye toda interfaz web; no existen componentes de UI que auditar por teclado o lector de pantalla. Texto original, aplicable solo si se agrega una interfaz web: "El campo de búsqueda es navegable por teclado, tiene etiqueta accesible y anuncia el número de resultados."
+## Functional Requirements
+- FR-01: The system shall provide a single search field that queries both the customer's name and email attributes simultaneously, returning the union of all matches with duplicates removed.
+- FR-02: The system must return substring matches that are case-insensitive and diacritic-insensitive, applied equally to both the name and email fields.
+- FR-03: The system shall return the same set of results, in the same order, for search terms that differ only in terms of case or diacritics (acute, grave, and circumflex accents, as well as diaereses).
+- FR-04: The system shall return the same set of results, in the same order, for search terms that differ only by the presence of whitespace characters at the beginning or end.
+- FR-05: The system shall treat a query consisting solely of whitespace as an empty query, returning an empty result set with an explicit status, without performing a search and without triggering an error.
+- FR-06: The system shall return an empty list, a business status code of `NO_RESULTS`, and a fixed, system-defined message when no matches are found.
+- FR-07: The response shall contain no more than 50 items and must always include the total number of matches; any excess results are truncated, with no pagination mechanism provided.
+- FR-08: The system shall sort results based on exact matches, followed by the position of the match, with ties broken alphabetically and then by customer identifier.
+- FR-09: The system shall return results based on the data scope authorized for the user performing the search; for this release, the authorized scope is the complete catalog for all users, with no partitioning or role-based restrictions.
+- FR-10: The system shall return only the `cliente_id`, `nombre`, and `email` fields in the response; no other fields from the data model shall be exposed in the results. - FR-11: When the CLI is executed without arguments, the system shall initiate an interactive session that repeatedly prompts for search terms, processes each term using the existing search logic (FR-01 through FR-10), and outputs the results.
+- FR-12: Upon starting the interactive session, the system shall display a welcome message along with instructions on how to exit.
+- FR-13: The interactive session shall remain active following a query that results in an `EMPTY_QUERY` or `NO_RESULTS` state, displaying the corresponding outcome (FR-05, FR-06).
+- FR-14: The system shall allow the interactive session to be terminated via explicit exit commands or through terminal interruption/end-of-file (EOF) signals, without interpreting these actions as search terms.
+- FR-15: A single-execution invocation with arguments (e.g., `python -m customer_search.cli "<query>"`) shall maintain its current behavior.
+- FR-16: The system shall support an optional email-domain filter. When a domain value is supplied alongside the query, the result set shall be restricted to customers whose normalized email ends with that domain; when the domain filter is omitted or blank, search behavior is unchanged from FR-01 through FR-10.
 
-## Preguntas Abiertas 
-- Q-01: ¿Qué estados de cliente son buscables?
-  - Decisión: todos los registros del dataset son buscables; no se modelan estados de cliente (A-07). 
-- Q-02: ¿Cómo se define el alcance de datos por rol/usuario (qué ve cada rol)?
-  - Decisión: alcance único y total sobre el dataset local; no hay roles ni particiones (A-07, C-05). FR-09 se verifica con una matriz de un solo perfil.
-- Q-03: ¿"Nombre" es un solo campo de texto libre o nombre/apellidos separados? ¿Se puede buscar por apellido solo?
-  - Decisión: un único campo de texto libre con el nombre completo; al ser coincidencia por subcadena, buscar solo el apellido funciona sin campo dedicado (A-02, A-01).
-- Q-04: ¿Qué tipo(s) de coincidencia parcial se soportan (prefijo, subcadena, por token, todos los tokens, difusa) y aplica igual a nombre y a email?
-  - Decisión: subcadena en cualquier posición, insensible a mayúsculas/minúsculas y diacríticos, idéntica para nombre y email (A-01). No se soporta coincidencia difusa.
-- Q-05: ¿La lista de resultados se actualiza mientras el usuario escribe o solo tras un envío explícito?
-  - Decisión: solo tras envío explícito (comando o petición); no hay actualización incremental por pulsación (C-04).
-- Q-06: ¿Se soportan operadores/comodines en la entrada, o todo el texto se trata siempre como literal?
-  - Decisión: toda la entrada se trata como literal; no se soportan operadores, comodines ni expresiones regulares.
-- Q-07: ¿Cuáles son los criterios de ordenamiento y su prioridad (coincidencia exacta, posición del match, estado, recencia, alfabético)?
-  - Decisión: coincidencia exacta, luego coincidencia al inicio del campo, luego coincidencia en cualquier posición; dentro de cada grupo, alfabético por nombre y desempate por cliente_id (A-04, FR-08). No se usan estado ni recencia por A-07.
-- Q-08: ¿Cuál es el límite máximo de resultados por respuesta (<N>)?
-  - Decisión: N = 50, acompañado del total de coincidencias (A-05, FR-07).
-- Q-09: ¿Qué mecanismo de acceso al resto de resultados se usa: paginación, scroll incremental u otro?
-  - Decisión: truncamiento simple a N con total informado; sin paginación por lotes ni scroll incremental (A-11).
-- Q-10: ¿Qué campos del cliente son visibles en los resultados (lista blanca) y cuáles se consideran sensibles?
-  - Decisión: lista blanca = {cliente_id, nombre, email}; el modelo de dominio no incluye campos sensibles (A-06). 
-- Q-11: ¿Cuál es el texto exacto (por idioma) del mensaje de "sin resultados" y qué acción ofrece?
-  - Decisión: texto fijo en un único idioma (español), sin catálogo ni i18n; el mensaje sugiere revisar o limpiar el término de búsqueda (A-08, FR-06).
-- Q-12: ¿Qué comportamiento tiene la pantalla con consulta vacía: en blanco, listado por defecto, u otro?
-  - Decisión: no se ejecuta búsqueda; se devuelve resultado vacío con estado explícito y sin error (A-03, FR-05). 
-- Q-13: ¿Cuál es el umbral de latencia aceptable (p95/p99) y bajo qué carga (QPS) y volumen de clientes (<V>)?
-  - Decisión: p95 ≤ 50 ms, p99 ≤ 100 ms, medidos de forma local y secuencial (1 consulta por segundo) sobre 1 000 clientes en memoria (NFR-01, C-08, A-09). No hay carga concurrente declarada.
-- Q-14: ¿Cuál es el límite de tasa por usuario (<R> peticiones/minuto) antes de bloquear la búsqueda?
-  - Decisión: R = 60 como valor de referencia; no se implementa en esta entrega por C-05 (NFR-03).
-- Q-15: ¿Qué controles de auditoría se requieren sobre las búsquedas realizadas (retención de logs, anonimización)?
-  - Decisión: no aplica en esta entrega; C-05 excluye sesión y usuario identificable, por lo que no hay log de auditoría que definir (NFR-02).
-- Q-16: ¿Cuál es la matriz oficial de navegadores, sistemas operativos y breakpoints soportados (<matriz>)?
-  - Decisión: no aplica; la feature se entrega como CLI/API local sin interfaz web (C-04, NFR-04, NFR-05).
- 
-## Restricciones
-- C-01: La solución se implementa en Python 3.11+ con pytest como único framework de pruebas.
-- C-02: La persistencia se limita a memoria o a un archivo JSON local; no se usa motor de base de datos.
-- C-03: No se usan servicios, APIs o modelos de pago; las dependencias se restringen a la librería estándar más pytest, y cualquier dependencia adicional requiere justificación explícita.
-- C-04: La feature se entrega como interfaz local (CLI o API HTTP local); no existe interfaz web ni cliente móvil, por lo que no aplica matriz de navegadores, breakpoints ni accesibilidad de UI.
-- C-05: La ejecución es local, mono-proceso y mono-usuario; no hay sesión, autenticación, autorización por rol, TLS ni limitación de tasa.
-- C-06: El control de versiones es Git, con commits incrementales por tarea.
-- C-07: El código es producido por un coding agent y debe ser revisado y validado por el desarrollador antes de integrarse.
-- C-08: El conjunto de datos de trabajo es un dataset local acotado (≤ 1 000 clientes), suficiente para pruebas funcionales y de latencia, pero no para pruebas de carga concurrente.
+## Non-Functional Requirements
+- NFR-01: The search endpoint shall respond in ≤50 ms at the 95th percentile and ≤100 ms at the 99th percentile, under a sustained load of 1 query per second, against a catalog of 1,000 customers.
+- NFR-02: Not applicable to this release — C-05 excludes session management, authentication, and TLS for a local, single-process, single-user execution. (Original text, applicable only if the scope expands to a network-exposed deployment: "All access to the search function must occur over TLS 1.2+, require an authenticated session, and be recorded in an audit log—capturing the user, timestamp, normalized search term, and number of results—without storing the customer's personal data in the log.")
+- NFR-03: Not applicable to this release — C-05 explicitly excludes rate limiting for a local, single-user execution. Original text, applicable only if the scope changes to a multi-user deployment exposed over a network: "The endpoint must implement rate limiting of 60 requests per minute per user; if exceeded, it shall respond with an HTTP 429 status code without revealing client information."
+- NFR-04: Not applicable to this delivery — C-04 excludes any web interface; there are no browsers, operating systems, or breakpoints to verify. Original text, applicable only if a web interface is added: "The search interface must be operable without loss of functionality or horizontal scrolling across all browser/OS/breakpoint combinations."
+- NFR-05: Not applicable to this delivery — C-04 excludes any web interface; there are no UI components to audit for keyboard or screen reader accessibility. Original text, applicable only if a web interface is added: "The search field must be keyboard-navigable, include an accessible label, and announce the number of results."
 
-## Suposiciones
-- A-01: Coincidencia parcial se interpreta como subcadena en cualquier posición, insensible a mayúsculas/minúsculas y a diacríticos, aplicada por igual a nombre y a correo electrónico.
-- A-02: El nombre del cliente es un único campo de texto libre que contiene el nombre completo; No se modelan nombre y apellidos como campos separados.
-- A-03: Una consulta vacía o compuesta solo por espacios no ejecuta búsqueda y devuelve un resultado vacío con estado explícito, sin error.
-- A-04: El orden de resultados es: coincidencia exacta, luego coincidencia al inicio del campo, luego coincidencia en cualquier posición; dentro de cada grupo, orden alfabético por nombre y desempate por identificador de cliente.
-- A-05: El límite máximo de resultados por respuesta es 50, acompañado del total de coincidencias.
-- A-06: Los campos expuestos en los resultados son identificador, nombre y correo electrónico; el modelo de dominio no incluye campos clasificados como sensibles.
-- A-07: Todos los clientes del conjunto de datos son buscables; no se modelan estados de cliente (activo, inactivo, eliminado) ni particiones de datos por alcance de usuario.
-- A-08: Los mensajes al usuario se emiten en un único idioma con texto fijo; no se implementa catálogo de textos ni internacionalización.
-- A-09: El umbral de rendimiento se verifica de forma local y secuencial sobre el dataset acotado, sin carga concurrente declarada.
-- A-10: A-01 a A-09 y A-11 son decisiones tomadas por el desarrollador, que asume el rol de responsable del producto a falta de uno externo, y quedan registradas como tales; un cambio en cualquiera de ellas obliga a revisar los requisitos afectados antes de la especificación y las pruebas.
-- A-11: El mecanismo de acceso a resultados más allá del límite de FR-07 es truncamiento simple con total informado; no se implementa paginación por lotes ni scroll incremental.
-- A-12: Una línea ingresada en la sesión interactiva es comando de salida solo si, tras eliminar espacios en los extremos, es exactamente `:salir` o `:exit` (insensible a mayúsculas/minúsculas); cualquier otro texto, incluso si contiene esas cadenas, se trata como término de búsqueda. Los comandos no se consideran términos de búsqueda válidos.
+## Open Questions
+- Q-01: Which client statuses are searchable? 
+  - Decision: All records in the dataset are searchable; client statuses are not modeled (A-07).
+- Q-02: How is the data scope defined by role/user (i.e., what does each role see)? 
+  - Decision: A single, full-access scope over the local dataset; there are no roles or partitions (A-07, C-05). FR-09 is verified using a single-profile matrix.
+- Q-03: Is "Name" a single free-text field, or are first and last names separate? Is it possible to search by last name only?
+  - Decision: a single free-text field for the full name; since matching is based on substrings, searching by surname alone works without the need for a dedicated field (A-02, A-01).
+- Q-04: What type(s) of partial matching are supported (prefix, substring, per-token, all-tokens, fuzzy), and do they apply equally to both name and email? 
+  - Decision: Substring matching at any position; case-insensitive and diacritic-insensitive; identical logic for both name and email (A-01). Fuzzy matching is not supported.
+- Q-05: Does the list of results update as the user types, or only after an explicit submission? 
+  - Decision: Only after an explicit submission (command or request); there is no incremental update per keystroke (C-04).
+- Q-06: Are operators or wildcards supported in the input, or is all text treated strictly as a literal string? 
+  - Decision: All input is treated as a literal string; operators, wildcards, and regular expressions are not supported.
+- Q-07: What are the sorting criteria and their order of priority (e.g., exact match, match position, status, recency, alphabetical)? 
+  - Decision: Exact match first, followed by a match at the beginning of the field, then a match at any position. Within each group, results are sorted alphabetically by name, with `client_id` used as a tie-breaker (A-04, FR-08). Status and recency are not used (A-07).
+- Q-08: What is the maximum number of results per response (<N>)? 
+  - Decision: N = 50, accompanied by the total number of matches (A-05, FR-07).
+- Q-09: What mechanism is used to access the remaining results (e.g., pagination, incremental scrolling, etc.)? 
+  - Decision: Simple truncation at N, with the total count provided; no batch pagination or incremental scrolling (A-11). 
+- Q-10: Which customer fields are visible in the results (allowlist), and which are considered sensitive? 
+  - Decision: allowlist = {customer_id, name, email}; the domain model does not include sensitive fields (A-06).
+- Q-11: What is the exact text (per language) for the "no results" message, and what action does it offer? 
+  - Decision: fixed text in a single language (Spanish), with no localization/i18n; the message suggests reviewing or clearing the search term (A-08, FR-06).
+- Q-12: How does the screen behave when the query is empty—does it appear blank, show a default list, or something else? 
+  - Decision: no search is executed; an empty result is returned with an explicit status and no error (A-03, FR-05).
+- Q-13: What is the acceptable latency threshold (p95/p99), and under what load (QPS) and customer volume (<V>)? 
+  - Decision: p95 ≤ 50 ms, p99 ≤ 100 ms, measured locally and sequentially (1 query per second) with 1,000 customers in memory (NFR-01, C-08, A-09). No concurrent load is specified.
+- Q-14: What is the rate limit per user (<R> requests/minute) before blocking search access? 
+  - Decision: R = 60 as a reference value; not implemented in this release per C-05 (NFR-03).
+- Q-15: What audit controls are required for searches performed (log retention, anonymization)? 
+  - Decision: not applicable to this release; C-05 excludes sessions and identifiable users; therefore, no audit log needs to be defined (NFR-02).
+- Q-16: What is the official matrix of supported browsers, operating systems, and breakpoints (<matrix>)? 
+  - Decision: Not applicable; the feature is delivered as a local CLI/API without a web interface (C-04, NFR-04, NFR-05).
+- Q-17: How should the optional email-domain filter (FR-16) be compared, and what happens with an empty or whitespace-only domain value?
+  - Decision: The domain comparison reuses the existing normalization rules (case-insensitive, diacritic-insensitive, FR-02/FR-03) and checks that the normalized email ends with the normalized domain. A domain value that is empty or consists solely of spaces is treated as "no filter applied" (A-13).
 
-Nota: REQUIREMENTS.md es la fuente de la verdad para FR/NFR
+## Constraints
+- C-01: The solution is implemented in Python 3.11+ using `pytest` as the sole testing framework.
+- C-02: Data persistence is limited to memory or a local JSON file; no database engine is used.
+- C-03: No paid services, APIs, or models are used; dependencies are restricted to the standard library plus `pytest`. Any additional dependency requires explicit justification.
+- C-04: The feature is delivered as a local interface (CLI or local HTTP API); there is no web interface or mobile client, so the matrix for browsers, breakpoints, and UI accessibility does not apply.
+- C-05: Execution is local, single-process, and single-user; there are no sessions, authentication, role-based authorization, TLS, or rate limiting.
+- C-06: Version control is managed via Git, with incremental commits for each task.
+- C-07: The code is generated by a coding agent and must be reviewed and validated by the developer before integration.
+- C-08: The working dataset is a limited local dataset (≤ 1,000 clients), sufficient for functional and latency testing, but not for concurrent load testing. ## Assumptions
+- A-01: A partial match is interpreted as a substring found at any position; it is case-insensitive and diacritic-insensitive, and applies equally to both the name and the email address.
+- A-02: The customer name is a single free-text field containing the full name; first and last names are not modeled as separate fields.
+- A-03: An empty query—or one consisting solely of spaces—does not trigger a search; instead, it returns an empty result set with an explicit status, without an error.
+- A-04: The order of results is: exact match, followed by a match at the beginning of the field, followed by a match in any position; within each group, results are sorted alphabetically by name, with the customer identifier used as a tie-breaker.
+- A-05: The maximum number of results per response is 50, accompanied by the total number of matches.
+- A-06: The fields exposed in the results are identifier, name, and email; the domain model does not include fields classified as sensitive.
+- A-07: All customers in the dataset are searchable; customer states (active, inactive, deleted) and data partitioning based on user scope are not modeled.
+- A-08: User messages are provided in a single language using fixed text; no text catalog or internationalization is implemented.
+- A-09: The performance threshold is verified locally and sequentially on the scoped dataset, with no concurrent load specified.
+- A-10: A-01 through A-09 and A-11 are decisions made by the developer—who assumes the role of product owner in the absence of an external one—and are documented as such; any change to these decisions requires a review of the affected requirements prior to specification and testing.
+- A-11: The mechanism for accessing results beyond the limit defined in FR-07 is simple truncation, with the total count provided; neither batch-based pagination nor incremental scrolling is implemented.
+- A-12: A line entered during an interactive session is interpreted as an exit command only if, after trimming leading and trailing whitespace, it is exactly `:salir` or `:exit` (case-insensitive); any other text—even if it contains these strings—is treated as a search term. Commands are not considered valid search terms.
+- A-13: The email-domain filter (FR-16) is applied after the existing name/email substring match (FR-01, FR-02), using the same normalization pipeline; an omitted or blank domain value leaves current search behavior unchanged.
+
+Note: REQUIREMENTS.md is the source of truth for FR/NFR (functional/non-functional requirements).

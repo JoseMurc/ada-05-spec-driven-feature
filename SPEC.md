@@ -1,99 +1,97 @@
 # Customer Search Feature 
  
-## Goal 
-Proveer una búsqueda local de clientes por nombre o email, mediante un único campo de entrada, que devuelva coincidencias parciales normalizadas de forma determinista y acotada.
- 
-## Requirements Covered  
-- FR-01, FR-02, FR-03, FR-04, FR-05, FR-06, FR-07, FR-08, FR-09, FR-10, FR-11, FR-12, FR-13, FR-14, FR-15
+## Goal
+Provide a local customer search by name or email via a single input field, returning normalized partial matches in a deterministic and bounded manner.
+
+## Requirements Covered
+- FR-01, FR-02, FR-03, FR-04, FR-05, FR-06, FR-07, FR-08, FR-09, FR-10, FR-11, FR-12, FR-13, FR-14, FR-15, FR-16
 - NFR-01, NFR-02, NFR-03
 
-NFR-02 y NFR-03 están marcados como "No aplica en esta entrega" en REQUIREMENTS.md (C-05: ejecución local mono-usuario). Se listan aquí porque el alcance de este incremento sí decide explícitamente qué comportamiento tienen — ninguno — y ese comportamiento se especifica en Error Handling.
-## Scope 
- 
-- Un único campo de búsqueda que consulta nombre y email simultáneamente (FR-01).
-- Coincidencia por subcadena, insensible a mayúsculas/minúsculas y diacríticos (FR-02, FR-03).
-- Recorte de espacios al inicio/fin de la entrada; preservación de espacios internos (FR-04).
-- Clasificación de consulta vacía o solo espacios como consulta vacía, sin ejecutar búsqueda (FR-05).
-- Respuesta explícita de "sin resultados" cuando no hay coincidencias (FR-06).
-- Verificación de latencia bajo carga local secuencial (NFR-01).
-- Truncamiento a 50 resultados con total de coincidencias informado (FR-07).
-- Ordenamiento determinista con desempate por cliente_id (FR-08).
-- Alcance de datos único (catálogo completo) para cualquier usuario buscador (FR-09).
-- Lista blanca de campos en la respuesta: cliente_id, nombre, email (FR-10).
-- Sesión interactiva al invocar la CLI sin argumentos, con consultas repetidas sobre la misma lógica de búsqueda (FR-11).
-- Banner de bienvenida con instrucciones de los comandos de salida (FR-12).
-- Permanencia de la sesión tras `EMPTY_QUERY` o `NO_RESULTS` (FR-13).
-- Finalización de la sesión por `:salir`/`:exit` o por interrupción/fin de archivo de la terminal (FR-14, A-12).
-- Preservación de la invocación de un solo disparo con argumento (FR-15).
+NFR-02 and NFR-03 are marked as "Not applicable for this delivery" in REQUIREMENTS.md (C-05: single-user local execution). They are listed here because the scope of this increment explicitly defines their behavior—which is "none"—and this behavior is specified under "Error Handling."
+## Scope
 
-## Out of Scope 
+- A single search field that queries both name and email simultaneously (FR-01).
+- Substring matching, case-insensitive and diacritic-insensitive (FR-02, FR-03).
+- Trimming of leading and trailing whitespace; preservation of internal whitespace (FR-04).
+- Queries that are empty or consist only of whitespace are treated as empty queries, with no search performed (FR-05).
+- Explicit "no results" response when no matches are found (FR-06).
+- Latency verification under sequential local load (NFR-01).
+- Truncation to 50 results, with the total number of matches reported (FR-07).
+- Deterministic sorting, with `customer_id` used as a tie-breaker (FR-08).
+- A single data scope (the complete catalog) for any user performing a search (FR-09). - Whitelist of fields in the response: `cliente_id`, `nombre`, `email` (FR-10).
+- Interactive session when the CLI is invoked without arguments, allowing repeated queries using the same search logic (FR-11).
+- Welcome banner with instructions on how to exit (FR-12).
+- Session persistence following an `EMPTY_QUERY` or `NO_RESULTS` outcome (FR-13).
+- Session termination via `:salir`/`:exit`, or through terminal interruption/end-of-file (FR-14, A-12).
+- Support for single-execution (one-shot) invocations with arguments (FR-15).
+- Optional email-domain filter applied on top of the existing name/email match, with no effect when omitted or blank (FR-16).
 
-- Sesión, autenticación, TLS y log de auditoría (NFR-02 — no aplica, C-05).
-- Limitación de tasa (NFR-03 — no aplica, C-05).
-- Interfaz web, matriz de navegador/SO/breakpoint y accesibilidad de UI (NFR-04, NFR-05 — no aplica, C-04).
-- Paginación por lotes o scroll incremental (A-11: truncamiento simple con total informado).
-- Roles y particiones de datos por usuario (A-07; FR-09 se cubre en su forma degenerada, alcance único).
-- Búsqueda difusa, operadores y comodines (Q-04, Q-06).
+## Out of Scope
 
- 
-## Domain Model 
+- Session management, authentication, TLS, and audit logging (NFR-02 — not applicable, C-05).
+- Rate limiting (NFR-03 — not applicable, C-05).
+- Web interface, browser/OS/breakpoint compatibility matrix, and UI accessibility (NFR-04, NFR-05 — not applicable, C-04).
+- Batch pagination or incremental scrolling (A-11: simple truncation with a total count provided).
+- User roles and data partitioning (A-07; FR-09 is covered in its degenerate form—single scope).
+- Fuzzy search, operators, and wildcards (Q-04, Q-06).
+
+## Domain Model
 Customer:
-- cliente_id: str — identificador estable y único.
-- nombre: str — texto libre, nombre completo (A-02).
-- email: str — dirección de correo del cliente.
-Storage: persistencia en memoria o archivo JSON local (C-02). La estructura de indexado y el mecanismo de normalización interna son decisiones técnicas de ARCHITECTURE.md, no de esta especificación.
+- `cliente_id`: str — a stable, unique identifier.
+- `nombre`: str — free-text field for the full name (A-02).
+- `email`: str — the customer's email address.
+Storage: In-memory persistence or local JSON file (C-02). The indexing structure and internal normalization mechanism are technical decisions defined in `ARCHITECTURE.md`, not in this specification. ## Search Rules
+- SR-01 [FR-01]: A query is compared simultaneously against `name` and `email`; the result is the union of matches from both fields, with no duplicates based on `client_id`.
+- SR-02 [FR-02]: A match occurs when the normalized query appears as a substring anywhere within the normalized field (not just at the beginning).
+- SR-03 [FR-03]: Before comparison, both the query and the indexed fields are normalized to lowercase, with all diacritics removed (e.g., á/à/â/ä → a, and similar).
+- SR-04 [FR-04]: Leading and trailing spaces in the query are trimmed before normalization; internal spaces are preserved and included in the comparison.
+- SR-05 [FR-05]: A query that is empty or consists solely of spaces is classified as an empty query and does not trigger a search.
+- SR-06 [FR-07]: The result set is truncated to a maximum of 50 items; the response always includes the actual total number of matches, regardless of what that total may be.
+- SR-07 [FR-08]: Ordering: (1) exact match, (2) match at the beginning of the field, (3) match at any position; within each group, results are sorted alphabetically by `name`, with `client_id` used as a tie-breaker.
+- SR-08 [FR-09]: The authorized data scope is the entire catalog for any user performing a search; there are no partitions or roles in this increment (A-07).
+- SR-09 [FR-10]: The response includes only `client_id`, `name`, and `email`; no other domain fields are included. 
+- SR-10 [FR-11, FR-15]: If the CLI is invoked without arguments, an interactive session is initiated via the `InteractiveSession` controller, allowing for repeated queries using the existing search logic; if invoked with arguments (`python -m customer_search.cli "<query>"`), a single-execution (one-off) run is performed without starting an interactive session.
+- SR-11 [FR-12]: Upon starting the interactive session, a welcome banner ("Welcome to the customer search tool") is displayed, along with instructions on the available exit commands (`:salir` and `:exit`).
+- SR-12 [FR-11]: Each cycle of the interactive session prompts for a query using the fixed indicator `"Buscar cliente: "` and displays the retrieved results without terminating the session.
+- SR-13 [FR-13]: For queries that result in `EMPTY_QUERY` or `NO_RESULTS`, the interactive session displays the corresponding message (FR-05, FR-06) and remains active, awaiting the next query.
+- SR-14 [FR-14, A-12]: The interactive session terminates cleanly upon receiving an explicit exit command (`:salir` or `:exit`), without interpreting it as a search term or querying the repository.
+- SR-15 [FR-16, A-13]: When a non-blank domain value is supplied, the result set from SR-01/SR-02 is further restricted to customers whose normalized email ends with the normalized domain; truncation (SR-06) and ordering (SR-07) are applied after this restriction.
 
-## Search Rules 
-- SR-01 [FR-01]: Una consulta se compara simultáneamente contra `nombre` y `email`; el resultado es la unión de las coincidencias de ambos campos, sin duplicados por `cliente_id`.
-- SR-02 [FR-02]: Existe coincidencia cuando la consulta normalizada aparece como subcadena en cualquier posición del campo normalizado (no solo al inicio).
-- SR-03 [FR-03]: Antes de comparar, tanto la consulta como los campos indexados se normalizan a minúsculas y sin diacríticos (á/à/â/ä → a, y análogos).
-- SR-04 [FR-04]: Los espacios al inicio y al final de la consulta se recortan antes de normalizar; los espacios internos se preservan y participan en la comparación.
-- SR-05 [FR-05]: Una consulta vacía o compuesta únicamente por espacios se clasifica como consulta vacía y no dispara búsqueda.
-- SR-06 [FR-07]: El resultado se trunca a un máximo de 50 elementos; la respuesta siempre incluye el total real de coincidencias, sea cual sea ese total.
-- SR-07 [FR-08]: Orden: (1) coincidencia exacta, (2) coincidencia al inicio del campo, (3) coincidencia en cualquier posición; dentro de cada grupo, alfabético por nombre, desempate por cliente_id.
-- SR-08 [FR-09]: El alcance de datos autorizado es el catálogo completo para cualquier usuario buscador; no existen particiones ni roles en este incremento (A-07).
-- SR-09 [FR-10]: La respuesta expone únicamente cliente_id, nombre y email; ningún otro campo del dominio se incluye.
-- SR-10 [FR-11, FR-15]: Si la CLI se invoca sin argumentos, se inicia una sesión interactiva a través del controlador `InteractiveSession` ejecutando consultas de forma repetida sobre la lógica de búsqueda existente; si se invoca con argumentos (`python -m customer_search.cli "<query>"`), se preserva la ejecución de un solo disparo sin iniciar la sesión interactiva.
-- SR-11 [FR-12]: Al arrancar la sesión interactiva se presenta el banner de bienvenida ("Bienvenido a buscador de clientes") y las instrucciones sobre los comandos de salida disponibles (`:salir` y `:exit`).
-- SR-12 [FR-11]: Cada ciclo de la sesión interactiva solicita una consulta mediante el indicador fijo `"Buscar cliente: "` e imprime los resultados obtenidos sin abandonar la sesión.
-- SR-13 [FR-13]: Ante consultas que resulten en `EMPTY_QUERY` o `NO_RESULTS`, la sesión interactiva despliega el mensaje correspondiente (FR-05, FR-06) y permanece activa esperando la siguiente consulta.
-- SR-14 [FR-14, A-12]: La sesión interactiva finaliza limpiamente al recibir un comando de salida explícito (`:salir` o `:exit`), sin interpretarlo como término de búsqueda ni consultar el repositorio.
- 
-## Validation Rules 
-- VR-01 [FR-01, FR-02]: La entrada se trata siempre como texto literal; no se interpretan comodines, operadores ni expresiones regulares.
-- VR-02 [FR-05]: No hay longitud mínima de consulta distinta de la regla de consulta vacía (SR-05); una consulta de un solo carácter no vacío es válida y se ejecuta.
-- VR-03 [FR-07]: El límite de 50 no es configurable por quien llama; es un valor fijo del sistema.
-- VR-04 [FR-14, A-12]: Una línea ingresada en la sesión interactiva se valida como comando de salida si y solo si, tras recortar espacios en los extremos, coincide exactamente con ":salir" o ":exit" (insensible a mayúsculas/minúsculas); cualquier otra entrada se procesa como término de búsqueda literal.
- 
-## Error Handling 
-- EH-01 [FR-05]: Consulta vacía → no se ejecuta búsqueda; se devuelve el estado de consulta vacía definido (sin ejecutar), sin lanzar error.
-- EH-02 [FR-06]: Consulta sin coincidencias → se devuelve lista vacía, estado de negocio `NO_RESULTS` y el mensaje fijo definido, sin lanzar error.
-- EH-03 [NFR-02]: N/A — no existe sesión, autenticación ni canal TLS en el alcance local mono-usuario (C-05); no hay error de autenticación/transporte que manejar.
-- EH-04 [NFR-03]: N/A — no existe limitación de tasa en el alcance local mono-usuario (C-05); no hay respuesta de bloqueo (HTTP 429 o equivalente) que manejar.
-- EH-05 [FR-14]: Interrupción por teclado (`KeyboardInterrupt` / Ctrl+C) o fin de archivo (`EOFError` / Ctrl+D / Ctrl+Z) en el prompt de la sesión interactiva → se capturan limpiamente, finalizando la sesión sin emitir trazas de excepción ni errores no controlados.
- 
-## Acceptance Criteria 
-- AC-01 [FR-01]: Una consulta que coincide solo por nombre y otra que coincide solo por email devuelven cada una al cliente correspondiente.
-- AC-02 [FR-01]: Un cliente cuyo nombre y email coinciden con la misma consulta aparece exactamente una vez en el resultado.
-- AC-03 [FR-02]: Una consulta que coincide en medio o al final de un campo (no al inicio) devuelve al cliente correspondiente.
-- AC-04 [FR-03]: Las consultas "JOSÉ", "jose" y "José" devuelven el mismo conjunto de resultados.
-- AC-05 [FR-04]: Las consultas "ana" y " ana " devuelven el mismo conjunto de resultados, en el mismo orden.
-- AC-06 [FR-05]: Una consulta compuesta solo de espacios devuelve el estado de consulta vacía, sin ejecutar búsqueda y sin error.
-- AC-07 [FR-06]: Una consulta sin coincidencias devuelve lista vacía, estado `NO_RESULTS` y el mensaje definido.
-- AC-08 [NFR-01]: Sobre un catálogo de 1 000 clientes, con carga secuencial de 1 consulta por segundo, la latencia observada es ≤ 50 ms en p95 y ≤ 100 ms en p99.
-- AC-09 [FR-07]: Con más de 50 coincidencias, la respuesta contiene exactamente 50 elementos y el total real de coincidencias.
-- AC-10 [FR-08]: Ejecutar la misma consulta varias veces produce siempre el mismo orden de resultados.
-- AC-11 [FR-09]: Cualquier usuario que ejecute la misma consulta recibe el mismo conjunto de resultados.
-- AC-12 [FR-10]: Cada objeto cliente en la respuesta contiene únicamente las claves cliente_id, nombre y email.
-- AC-13 [FR-08]: Dado un conjunto con coincidencia exacta, coincidencia al inicio y coincidencia interna, el resultado las devuelve en ese orden, con desempate alfabético y por cliente_id.
-- AC-14 [FR-11, FR-15]: Ejecutar la CLI sin argumentos inicia la sesión interactiva; ejecutar la CLI con argumentos realiza una búsqueda de un solo disparo sin iniciar la sesión interactiva.
-- AC-15 [FR-12]: Al iniciar la sesión interactiva se visualiza el banner de bienvenida ("Bienvenido a buscador de clientes") junto con las instrucciones de los comandos de salida disponibles (`:salir` y `:exit`).
-- AC-16 [FR-11]: La sesión interactiva solicita consultas mediante el prompt fijo "Buscar cliente: ", ejecutando búsquedas sucesivas y mostrando sus resultados correspondientes.
-- AC-17 [FR-13]: Una consulta vacía o sin coincidencias dentro de la sesión interactiva muestra el mensaje esperado (EMPTY_QUERY o NO_RESULTS) y mantiene la sesión activa para la siguiente búsqueda.
-- AC-18 [FR-14, A-12]: Los comandos ":salir" y ":exit" (con o sin espacios en los extremos, e insensibles a mayúsculas/minúsculas) finalizan la sesión interactiva sin consultar el repositorio; términos de búsqueda válidos que contengan las palabras "salir" o "exit" se ejecutan como búsquedas normales.
-- AC-19 [FR-14]: Al recibir KeyboardInterrupt o EOFError durante el prompt de la sesión interactiva, el proceso finaliza de forma limpia sin emitir excepciones en consola.
+## Validation Rules
+- VR-01 [FR-01, FR-02]: Input is always treated as literal text; wildcards, operators, and regular expressions are not interpreted.
+- VR-02 [FR-05]: There is no minimum query length other than the rule regarding empty queries (SR-05); a single non-empty character is a valid query and will be executed.
+- VR-03 [FR-07]: The limit of 50 is not configurable by the caller; it is a fixed system value.
+- VR-04 [FR-14, A-12]: A line entered during the interactive session is validated as an exit command if and only if, after trimming leading and trailing whitespace, it matches exactly ":salir" or ":exit" (case-insensitive); any other input is processed as a literal search term.
+- VR-05 [FR-16, A-13]: A domain filter value that is empty or consists solely of spaces, after trimming, is treated as "no filter applied"; it never raises an error.
 
-## Test Scenarios 
+## Error Handling
+- EH-01 [FR-05]: Empty query → no search is performed; the defined empty-query status is returned (without execution), and no error is thrown. - EH-02 [FR-06]: A query with no matches results in an empty list, a business status of `NO_RESULTS`, and a predefined fixed message; no error is thrown.
+- EH-03 [NFR-02]: N/A — there is no session, authentication, or TLS channel in the single-user local scope (C-05); therefore, there are no authentication or transport errors to handle.
+- EH-04 [NFR-03]: N/A — there is no rate limiting in the single-user local scope (C-05); therefore, there are no blocking responses (HTTP 429 or equivalent) to handle.
+- EH-05 [FR-14]: A keyboard interrupt (`KeyboardInterrupt` / Ctrl+C) or end-of-file signal (`EOFError` / Ctrl+D / Ctrl+Z) at the interactive session prompt is handled gracefully, terminating the session without displaying exception stack traces or unhandled errors.
+
+## Acceptance Criteria
+- AC-01 [FR-01]: A query that matches only by name and a query that matches only by email each return the corresponding client.
+- AC-02 [FR-01]: A client whose name and email both match the same query appears exactly once in the results.
+- AC-03 [FR-02]: A query that matches within the middle or at the end of a field (not just at the beginning) returns the corresponding client.
+- AC-04 [FR-03]: The queries "JOSÉ", "jose", and "José" all return the same set of results.
+- AC-05 [FR-04]: The queries "ana" and " ana " return the same set of results, in the same order.
+- AC-06 [FR-05]: A query consisting solely of spaces returns an "empty query" status, without performing a search and without triggering an error. - AC-07 [FR-06]: A query with no matches returns an empty list, a `NO_RESULTS` status, and the defined message.
+- AC-08 [NFR-01]: Given a catalog of 1,000 clients, with a sequential load of 1 query per second, the observed latency is ≤ 50 ms at the p95 percentile and ≤ 100 ms at the p99 percentile.
+- AC-09 [FR-07]: When there are more than 50 matches, the response contains exactly 50 items and the actual total number of matches.
+- AC-10 [FR-08]: Executing the same query multiple times always yields the same order of results.
+- AC-11 [FR-09]: Any user who executes the same query receives the same set of results.
+- AC-12 [FR-10]: Each client object in the response contains only the keys `cliente_id`, `nombre`, and `email`.
+- AC-13 [FR-08]: Given a set containing exact matches, prefix matches (matches at the beginning), and internal matches, the results are returned in that order, with ties broken alphabetically and by `cliente_id`.
+- AC-14 [FR-11, FR-15]: Running the CLI without arguments launches an interactive session; running the CLI with arguments performs a one-off search without launching an interactive session.
+- AC-15 [FR-12]: Upon launching the interactive session, a welcome banner ("Welcome to the client search tool") is displayed, along with instructions for the available exit commands (`:salir` and `:exit`).
+- AC-16 [FR-11]: The interactive session prompts for queries using the fixed prompt "Buscar cliente: ", executing successive searches and displaying their corresponding results. 
+- AC-17 [FR-13]: An empty query or one with no matches within an interactive session displays the expected message (EMPTY_QUERY or NO_RESULTS) and keeps the session active for the next search.
+- AC-18 [FR-14, A-12]: The commands ":salir" and ":exit" (with or without leading/trailing spaces, and case-insensitive) terminate the interactive session without querying the repository; valid search terms containing the words "salir" or "exit" are executed as standard searches.
+- AC-19 [FR-14]: Upon receiving a `KeyboardInterrupt` or `EOFError` during the interactive session prompt, the process terminates cleanly without outputting exceptions to the console.
+- AC-20 [FR-16]: Given a query and a non-blank domain filter, only customers whose email domain matches it (case-insensitive, diacritic-insensitive) are returned; given the same query with the domain filter omitted or blank, the result set is identical to the one obtained before FR-16 existed.
+
+## Test Scenarios
 - TS-01 -> AC-01
 - TS-02 -> AC-02
 - TS-03 -> AC-03
@@ -101,7 +99,7 @@ Storage: persistencia en memoria o archivo JSON local (C-02). La estructura de i
 - TS-05 -> AC-05
 - TS-06 -> AC-06
 - TS-07 -> AC-07
-- TS-08 -> AC-08 (medición de latencia, no unitario)
+- TS-08 -> AC-08 (latency measurement; not a unit test)
 - TS-09 -> AC-09
 - TS-10 -> AC-10
 - TS-11 -> AC-11
@@ -113,12 +111,13 @@ Storage: persistencia en memoria o archivo JSON local (C-02). La estructura de i
 - TS-17 -> AC-17
 - TS-18 -> AC-18
 - TS-19 -> AC-19
- 
-## Constraints 
-- C-01, C-02, C-03: stack, persistencia y dependencias permitidas para toda la implementación de esta spec.
-- C-05: justifica que EH-03 y EH-04 sean N/A (no aplica sesión, TLS ni rate limiting).
-- C-08: acota el dataset a ≤ 1 000 clientes usado en AC-08/TS-08.
-- C-04: limita la entrega a interfaz local (CLI o API HTTP local); justifica que NFR-04 y NFR-05 no apliquen.
- 
-## Open Questions 
-N/A — todas las decisiones necesarias para FR-01–FR-15 y NFR-01–NFR-03 ya están resueltas en REQUIREMENTS.md (Q-01 a Q-16 y A-12 para los comandos de salida de la sesión interactiva). No quedan preguntas abiertas dentro del alcance de este incremento.
+- TS-20 -> AC-20
+
+## Constraints
+- C-01, C-02, C-03: Define the stack, persistence, and permitted dependencies for the entire implementation of this specification.
+- C-05: Justifies why EH-03 and EH-04 are marked as N/A (as the implementation does not involve sessions, TLS, or rate limiting).
+- C-08: Limits the dataset used in AC-08/TS-08 to ≤ 1,000 clients.
+- C-04: Limits delivery to a local interface (CLI or local HTTP API); justifies why NFR-04 and NFR-05 do not apply. 
+
+## Open Questions
+N/A — all decisions required for FR-01–FR-16 and NFR-01–NFR-03 have already been addressed in REQUIREMENTS.md (Q-01 through Q-17, plus A-12 regarding interactive session exit commands and A-13 regarding the email-domain filter). There are no remaining open questions within the scope of this increment.

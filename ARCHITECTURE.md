@@ -1,55 +1,53 @@
 # Architecture 
  
 ## Overview 
-Arquitectura de tres capas, proporcional al alcance de SPEC.md: una interfaz local (CLI o API HTTP local) con soporte para ejecución de un solo disparo y sesión interactiva (FR-11 a FR-15), un servicio que concentra las reglas de búsqueda, y un repositorio que abstrae el acceso a los datos en memoria o JSON. No se introducen colas, cachés ni bases de datos: el volumen (≤ 1 000 clientes) y la ejecución mono-proceso no lo justifican.
+A three-layer architecture, aligned with the scope defined in SPEC.md: a local interface (CLI or local HTTP API) supporting both single-execution and interactive session modes (FR-11 through FR-15); a service that centralizes search rules; and a repository that abstracts data access, whether from in-memory storage or JSON files. No queues, caches, or databases are included, as the scale (≤ 1,000 clients) and single-process execution do not warrant them.
 
 ```mermaid
 flowchart LR
     subgraph Presentation["Capa de Presentación"]
         A["CLI (cli.py)<br/>dispatcher"]
         S["InteractiveSession (session.py)<br/>controlador interactivo"]
-        A -. sin argumentos .-> S
+        A -. no arguments .-> S
     end
-    A -->|con argumento| B["Search Service (search_service.py)<br/>reglas de búsqueda"]
-    S -->|consultas repetidas| B
-    B --> C["Repository (repository.py)<br/>acceso a datos"]
-    C --> D[("Customer Data<br/>memoria / JSON")]
+    A -->|with argument| B["Search Service (search_service.py)<br/>search rules"]
+    S -->|repeated querys| B
+    B --> C["Repository (repository.py)<br/>access to data"]
+    C --> D[("Customer Data<br/>memory / JSON")]
 ```
 
-## Components 
-- **CLI (`customer_search.cli`)**: punto de entrada local y despachador. Parsea argumentos de entrada; si recibe una consulta ejecuta la búsqueda de un solo disparo; si no recibe argumentos, inicia la sesión interactiva (FR-11, FR-15).
-- **Formatting (`customer_search.formatting`)**: función `format_output` de la capa de presentación que traduce cada `SearchResult` (`OK`, `EMPTY_QUERY`, `NO_RESULTS`) a texto. La comparten la CLI y `InteractiveSession`, de modo que ninguno de los dos módulos depende del otro para formatear.
-- **InteractiveSession (`customer_search.session`)**: controlador de sesión interactiva. Gestiona el ciclo REPL en terminal: muestra el banner de bienvenida con instrucciones de salida (`:salir`, `:exit`), solicita entradas repetidas con el prompt `"Buscar cliente: "`, filtra comandos de salida y señales de terminal (`KeyboardInterrupt`, `EOFError`), e invoca al `SearchService` mostrando resultados formateados sin abortar la sesión (FR-11 a FR-14, SR-10 a SR-14).
-- **Search Service (`customer_search.search_service`)**: aplica normalización, coincidencia, orden, truncamiento y proyección de campos. Es el único componente con reglas de negocio.
-- **Repository (`customer_search.repository`)**: expone el catálogo completo de clientes al Search Service, sin conocer reglas de búsqueda.
-- **Customer Data**: almacenamiento en memoria o archivo JSON local (C-02).
- 
-## Responsibilities 
-- **CLI (`cli.py`)**: parsear argumentos mediante `argparse`, detectar presencia/ausencia de consulta, despachar a búsqueda de un solo disparo o delegar en `InteractiveSession.run()`.
-- **Formatting (`formatting.py`)**: presentar `SearchResult` como texto (`format_output`); sin reglas de negocio.
-- **InteractiveSession (`session.py`)**: ciclo REPL (SR-10, SR-12), banner e instrucciones de salida (SR-11), validación de comandos `:salir` y `:exit` (VR-04, SR-14, A-12), captura limpia de interrupciones de terminal (EH-05), invocación a `SearchService.search` y presentación de resultados preservando la sesión ante `EMPTY_QUERY` y `NO_RESULTS` (SR-13).
-- **Search Service**: SR-01 a SR-09 (unión sin duplicados, subcadena, normalización, trim, consulta vacía, truncamiento a 50, orden con desempate, alcance único, proyección de campos), EH-01 y EH-02 (consulta vacía y sin resultados).
-- **Repository**: `find_all()` sobre Customer Data; no filtra, no ordena, no normaliza.
-- **Customer Data**: persistir y devolver registros crudos; no valida reglas de búsqueda.
- 
-## Data Flow 
-**1. Modo de un solo disparo (con argumento, FR-15):**
-1. El usuario ejecuta `python -m customer_search.cli "<query>"`.
-2. La CLI pasa la consulta cruda a `SearchService.search(query)`.
-3. Search Service recorta espacios (SR-04); si el resultado es vacío, aplica EH-01 y retorna sin consultar el Repository.
-4. Search Service pide el catálogo completo al Repository (`find_all()`).
-5. Search Service normaliza consulta y campos (SR-03), filtra por subcadena (SR-02) en nombre y email, y deduplica por `cliente_id` (SR-01).
-6. Search Service ordena (SR-07) y trunca a 50 con total informado (SR-06).
-7. Search Service proyecta cada resultado a {cliente_id, nombre, email} (SR-09); si el conjunto es vacío aplica EH-02, poblando `status = "NO_RESULTS"` y `message` con la constante del servicio.
-8. La CLI recibe el resultado, formatea la salida con `format_output` (`formatting.py`) y finaliza con código 0.
+## Components
+- **CLI (`customer_search.cli`)**: Local entry point and dispatcher. It parses input arguments; if a query is provided, it executes a one-off search, whereas if no arguments are provided, it initiates an interactive session (FR-11, FR-15).
+- **Formatting (`customer_search.formatting`)**: Contains the `format_output` function (part of the presentation layer), which translates each `SearchResult` (`OK`, `EMPTY_QUERY`, `NO_RESULTS`) into text. This is shared by both the CLI and `InteractiveSession`, ensuring that neither module depends on the other for formatting.
+- **InteractiveSession (`customer_search.session`)**: An interactive session controller. It manages the REPL cycle in the terminal: displaying a welcome banner with exit instructions (`:salir`, `:exit`), repeatedly prompting for input with `"Buscar cliente: "`, filtering out exit commands and terminal signals (`KeyboardInterrupt`, `EOFError`), and invoking the `SearchService` to display formatted results without terminating the session (FR-11 to FR-14, SR-10 to SR-14).
+- **Search Service (`customer_search.search_service`)**: Handles normalization, matching, ordering, truncation, and field projection. This is the only component that contains business logic.
+- **Repository (`customer_search.repository`)**: Exposes the complete catalog of customers to the `SearchService`, without any knowledge of search rules.
+- **Customer Data**: Stored either in-memory or in a local JSON file (C-02).
 
-**2. Modo interactivo (sin argumentos, FR-11 a FR-14):**
-1. El usuario ejecuta `python -m customer_search.cli` sin argumentos.
-2. La CLI detecta la ausencia de argumento e invoca `InteractiveSession(service=search_service).run()`.
-3. `InteractiveSession` imprime el banner de bienvenida con instrucciones explícitas de salida (`:salir`, `:exit`).
-4. `InteractiveSession` entra en ciclo solicitando la consulta con el prompt `"Buscar cliente: "`.
-5. Si la entrada es un comando de salida (`:salir` o `:exit`, A-12) o se produce una señal de terminal (`KeyboardInterrupt`, `EOFError`), finaliza limpiamente la sesión sin consultar `SearchService`.
-6. Si es un término de búsqueda, delega en `SearchService.search(query)`, imprime el resultado formateado y repite el ciclo (permaneciendo activa ante `EMPTY_QUERY` o `NO_RESULTS`).
+## Responsibilities
+- **CLI (`cli.py`)**: Parses arguments using `argparse`, detects the presence or absence of a query, and either dispatches a one-off search or delegates execution to `InteractiveSession.run()`.
+- **Formatting (`formatting.py`)**: Presents `SearchResult` objects as text (via `format_output`); contains no business logic. - **InteractiveSession (`session.py`)**: REPL loop (SR-10, SR-12), banner and exit instructions (SR-11), validation of `:salir` and `:exit` commands (VR-04, SR-14, A-12), clean handling of terminal interrupts (EH-05), invocation of `SearchService.search`, and presentation of results while maintaining the session state in the event of `EMPTY_QUERY` or `NO_RESULTS` (SR-13).
+- **Search Service**: SR-01 through SR-09 (deduplication, substring matching, normalization, whitespace trimming, handling empty queries, truncation to 50 results, sorting with tie-breaking, single-scope search, and field projection), plus EH-01 and EH-02 (handling empty queries and cases with no results).
+- **Repository**: `find_all()` on Customer Data; performs no filtering, sorting, or normalization.
+- **Customer Data**: Persists and returns raw records; does not validate search rules.
+
+## Data Flow
+**1. Single-shot mode (with argument, FR-15):**
+1. The user executes `python -m customer_search.cli "<query>"`.
+2. The CLI passes the raw query to `SearchService.search(query)`.
+3. The Search Service trims whitespace (SR-04); if the result is empty, it triggers EH-01 and returns without querying the Repository.
+4. The Search Service requests the complete catalog from the Repository (`find_all()`).
+5. The Search Service normalizes the query and fields (SR-03), filters by substring (SR-02) within the name and email fields, and removes duplicates based on `cliente_id` (SR-01).
+6. The Search Service sorts the results (SR-07), truncates the list to 50 entries, and provides the total count (SR-06). 7. The Search Service maps each result to `{cliente_id, name, email}` (SR-09); if the set is empty, it applies EH-02, setting `status = "NO_RESULTS"` and populating `message` with the service's defined constant.
+8. The CLI receives the result, formats the output using `format_output` (from `formatting.py`), and terminates with an exit code of 0.
+
+**2. Interactive mode (no arguments, FR-11 to FR-14):**
+1. The user executes `python -m customer_search.cli` without any arguments.
+2. The CLI detects the absence of arguments and invokes `InteractiveSession(service=search_service).run()`.
+3. `InteractiveSession` displays a welcome banner with explicit instructions on how to exit (`:salir`, `:exit`).
+4. `InteractiveSession` enters a loop, requesting a query via the prompt `"Buscar cliente: "`.
+5. If the input is an exit command (`:salir` or `:exit`, A-12) or a terminal signal occurs (`KeyboardInterrupt`, `EOFError`), the session terminates cleanly without querying the `SearchService`.
+6. If the input is a search term, it delegates the request to `SearchService.search(query)`, prints the formatted result, and repeats the loop (remaining active even in the event of `EMPTY_QUERY` or `NO_RESULTS`).
  
 ## Interfaces 
 ```python
@@ -83,32 +81,30 @@ class InteractiveSession:
     def handle_input(self, raw_input: str) -> bool: ...
     def is_exit_command(self, text: str) -> bool: ...
 ```
-El repositorio devuelve entidades `Customer` completas; Search Service es responsable de proyectarlas a `CustomerView` antes de devolverlas a la interfaz, de modo que ningún campo fuera de la lista blanca cruce esa frontera.
- 
-## Error Handling 
-La lógica de negocio y validación de consultas vive en Search Service, mientras que el control de terminal reside en la capa de presentación:
-- Consulta vacía o solo espacios → `status = "EMPTY_QUERY"`, `items = []`, sin invocar al Repository (EH-01). En sesión interactiva, se despliega el mensaje informativo y la sesión continúa (FR-13, SR-13).
-- Consulta sin coincidencias → `status = "NO_RESULTS"`, `items = []`, mensaje fijo tomado de una constante del servicio (EH-02). En sesión interactiva, se despliega el mensaje y la sesión continúa (FR-13, SR-13).
-- Interrupción o fin de archivo en terminal → `KeyboardInterrupt` y `EOFError` son capturados limpiamente por `InteractiveSession`, cerrando el bucle interactivo sin trazas de excepción ni código de error (EH-05, FR-14).
-- No hay manejo de errores de autenticación, TLS o rate limiting: no existen esos componentes en esta arquitectura (EH-03, EH-04 de SPEC.md, N/A por C-05).
- 
-## Testing Strategy 
-- **Unit — Search Service**: normalización (diacríticos/case), subcadena en cualquier posición, deduplicación, trim de espacios, consulta vacía, truncamiento a 50 con total correcto, orden y desempate por `cliente_id`, proyección de campos.
-- **Unit — Repository**: lectura/escritura contra el backend en memoria o JSON (C-02), incluyendo dataset vacío y dataset en el límite de C-08.
-- **Unit — InteractiveSession (`tests/test_session.py`)**: pruebas unitarias aisladas inyectando simulaciones de `input_fn` y `output_fn` (sin monkeypatching global). Verifican banner, comandos de salida (`:salir`, `:exit`, insensible a mayúsculas y con espacios), tolerancia a `EMPTY_QUERY`/`NO_RESULTS` sin salir, y captura limpia de `EOFError` y `KeyboardInterrupt` (AC-15 a AC-19).
-- **Integration — CLI (`tests/test_cli.py`)**: verificación de que la invocación sin argumentos despacha a `InteractiveSession` (AC-14), mientras que la invocación con argumentos preserva la ejecución de un solo disparo existente.
-- **Latencia (NFR-01 / AC-08)**: prueba separada, no unitaria, que ejecuta consultas secuenciales sobre 1 000 clientes y mide p95/p99.
- 
-## Dependencies 
-Librería estándar de Python (`unicodedata` para remover diacríticos, `json` para persistencia) más `pytest` para pruebas (C-01, C-03). Ninguna dependencia de terceros para producción.
- 
-## Design Decisions 
-- La normalización, el orden, el truncamiento y la proyección de campos viven en Search Service, no en el Repository ni en la interfaz: mantiene la lógica de negocio testable de forma aislada, independiente del almacenamiento y de la presentación.
-- FR-09 se implementa como "sin filtrado" (Search Service siempre consulta el catálogo completo): es la traducción fiel de su forma degenerada en SPEC.md (A-07, alcance único). El punto de extensión para una autorización real por rol quedaría en Search Service, antes de la proyección, sin tocar Repository ni interfaz.
-- La proyección de campos (FR-10) se aplica en Search Service y no en la interfaz, para que la lista blanca se cumpla sin importar cuántas interfaces (CLI, API) consuman el servicio.
-- La sesión interactiva se aísla en un controlador dedicado (`InteractiveSession` en `session.py`) dentro de la capa de presentación: permite inyectar callables para `input_fn` y `output_fn`, facilitando pruebas unitarias limpias y deterministas sin monkeypatching global y sin alterar las capas de dominio, servicio o repositorio.
- 
+The repository returns complete `Customer` entities; the Search Service is responsible for projecting them into `CustomerView` objects before returning them to the interface, ensuring that no fields outside the allowlist cross this boundary.
+
+## Error Handling
+Business logic and query validation reside within the Search Service, while terminal control resides in the presentation layer:
+- Empty or whitespace-only query → `status = "EMPTY_QUERY"`, `items = []`, without invoking the Repository (EH-01). In an interactive session, an informational message is displayed, and the session continues (FR-13, SR-13).
+- Query with no matches → `status = "NO_RESULTS"`, `items = []`, with a fixed message retrieved from a service constant (EH-02). In an interactive session, the message is displayed, and the session continues (FR-13, SR-13).
+- Terminal interruption or end-of-file → `KeyboardInterrupt` and `EOFError` are handled gracefully by `InteractiveSession`, terminating the interactive loop without displaying exception traces or error codes (EH-05, FR-14).
+- Authentication, TLS, or rate-limiting errors are not handled, as these components do not exist within this architecture (EH-03, EH-04 from SPEC.md; N/A per C-05).
+
+## Testing Strategy
+- **Unit — Search Service**: normalization (diacritics/case), substring matching at any position, deduplication, whitespace trimming, empty queries, truncation to 50 items (with the correct total count), sorting (including tie-breaking by `cliente_id`), and field projection.
+- **Unit — Repository**: read/write operations against an in-memory or JSON backend (C-02), covering scenarios such as an empty dataset and a dataset at the limit defined by C-08. - **Unit — `InteractiveSession` (`tests/test_session.py`)**: Isolated unit tests using injected mocks for `input_fn` and `output_fn` (avoiding global monkeypatching). These verify the banner, exit commands (case-insensitive `:salir` and `:exit`, including handling of extra spaces), robust handling of `EMPTY_QUERY`/`NO_RESULTS` (without exiting), and clean capture of `EOFError` and `KeyboardInterrupt` (AC-15 through AC-19).
+- **Integration — CLI (`tests/test_cli.py`)**: Verifies that invoking the CLI without arguments triggers `InteractiveSession` (AC-14), while invocation with arguments preserves the existing "single-shot" execution behavior.
+- **Latency (NFR-01 / AC-08)**: A separate (non-unit) test that executes sequential queries across 1,000 clients and measures p95/p99 latency.
+
+## Dependencies
+Uses the Python standard library (`unicodedata` for diacritic removal, `json` for persistence) and `pytest` for testing (C-01, C-03). There are no third-party dependencies for production.
+
+## Design Decisions
+- Normalization, ordering, truncation, and field projection are handled within the Search Service—not in the Repository or the interface layer. This ensures that business logic remains independently testable, decoupled from both the storage layer and the presentation layer.
+- FR-09 is implemented as "no filtering" (the Search Service always queries the entire catalog), which is the direct interpretation of its degenerate form as defined in `SPEC.md` (A-07, single scope). Future implementation of role-based authorization would be integrated into the Search Service—prior to field projection—without requiring changes to the Repository or the interface. - Field projection (FR-10) is implemented within the Search Service rather than at the interface level; this ensures the allowlist is enforced regardless of which interface (CLI, API) consumes the service.
+- The interactive session is isolated within a dedicated controller (`InteractiveSession` in `session.py`) in the presentation layer. This allows for the injection of callables for `input_fn` and `output_fn`, facilitating clean, deterministic unit testing without the need for global monkeypatching or modifications to the domain, service, or repository layers.
+
 ## Trade-offs
-- Consultar siempre el catálogo completo (`find_all()`) es simple y suficiente para ≤ 1 000 clientes (C-08), pero no escala a volúmenes mayores sin introducir indexado — decisión aceptable dado el alcance actual y explícitamente fuera de este incremento.
-- Concentrar toda la lógica en Search Service facilita las pruebas unitarias pero lo convierte en un componente más grande; se acepta porque el alcance es una sola feature y no justifica dividirlo en más colaboradores.
-- No hay capa de autenticación/autorización real (solo el punto de extensión señalado en Design Decisions): correcto para C-05, pero implica que reactivar FR-09 en su forma completa requerirá revisar Search Service y posiblemente el Repository. 
+- Querying the entire catalog (`find_all()`) is simple and sufficient for ≤ 1,000 clients (C-08), though it will not scale to larger volumes without the introduction of indexing—a decision deemed acceptable given the current scope, which explicitly excludes such scaling.
+- Consolidating all logic within the Search Service simplifies unit testing but results in a larger component; this is acceptable, as the scope is limited to a single feature and does not justify splitting the logic across additional collaborating components.
+- There is no full-fledged authentication/authorization layer (only the extension point noted in the Design Decisions); while this suffices for C-05, it means that fully re-enabling FR-09 would require revisions to the Search Service and, potentially, the Repository.
