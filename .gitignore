@@ -7,3 +7,10 @@ __pycache__/
 .pytest_cache/
 .coverage
 htmlcov/
+
+# Third-party skills installed via `npx skills add addyosmani/agent-skills` (ADA-07 Part II).
+# Kept locally for the coding agent to use, but not part of this repo's deliverable.
+.claude/
+skills-lock.json
+.agents/skills/*
+!.agents/skills/reviewing-pull-requests
