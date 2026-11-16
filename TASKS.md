@@ -64,3 +64,10 @@
 - Acceptance: The traceability matrix in `docs/Traceability.md` includes FR-11 through FR-15, linked to SR-10–SR-14, VR-04, EH-05, AC-14–AC-19, T-07, and T-08. `README.md` documents the interactive use of the CLI without arguments.
 - Verification: Manual consistency review across `REQUIREMENTS.md`, `SPEC.md`, `ARCHITECTURE.md`, `TASKS.md`, `docs/Traceability.md`, and `README.md`; the full `pytest -v` test suite passes.
 - Status: Completed
+
+## T-10 Optional email-domain filter (CR-001)
+- Goal: Add an optional email-domain filter to the existing customer search (FR-16, SR-15, VR-05, A-13). When a non-blank domain value is supplied alongside the query, restrict the result set to customers whose normalized email ends with the normalized domain, applying this restriction before truncation (SR-06) and ordering (SR-07); when the domain filter is omitted or blank, search behavior is unchanged.
+- Files: `src/customer_search/search_service.py` (`SearchService.search` gains an optional `domain` parameter), `src/customer_search/cli.py` (optional `--domain` argument), `tests/test_search_service.py`, `tests/test_cli.py`, `docs/Traceability.md`.
+- Acceptance: AC-20 from `SPEC.md` is met (non-blank domain filter restricts results by case/diacritic-insensitive email suffix; omitted or blank domain leaves pre-FR-16 behavior unchanged).
+- Verification: `pytest -v` (full suite) runs with no failures; corresponds to TS-20.
+- Status: Completed

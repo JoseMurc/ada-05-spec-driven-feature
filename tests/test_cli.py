@@ -1,10 +1,13 @@
 """Integration tests for customer search CLI."""
 
 from io import StringIO
+from typing import ClassVar
+
 import pytest
+
 from customer_search.cli import format_output, main
 from customer_search.messages import NO_RESULTS_MESSAGE
-from customer_search.search_service import CustomerView, SearchResult, SearchService
+from customer_search.search_service import CustomerView, SearchResult
 
 
 def test_format_output_ok():
@@ -72,7 +75,7 @@ def test_cli_main_no_results(monkeypatch):
 class _SpySession:
     """Test double recording how InteractiveSession is constructed and run."""
 
-    instances = []
+    instances: ClassVar[list] = []
 
     def __init__(self, service=None, **kwargs):
         self.service = service
@@ -157,6 +160,39 @@ def test_ac14_main_with_explicit_empty_arg_stays_one_shot(spy_session, monkeypat
     assert exit_code == 0
     assert spy_session.instances == []
     assert service.queries == [""]
+
+
+# --- AC-20 / TS-20: optional email-domain filter ---
+
+
+def test_build_parser_domain_defaults_to_blank():
+    from customer_search.cli import build_parser
+
+    args = build_parser().parse_args(["leo"])
+    assert args.domain == ""
+
+
+def test_ac20_main_with_domain_filters_results(monkeypatch):
+    captured = StringIO()
+    monkeypatch.setattr("sys.stdout", captured)
+
+    exit_code = main(["carlos", "--domain", "example.com"])
+
+    assert exit_code == 0
+    assert "Total de coincidencias:" in captured.getvalue()
+
+
+def test_ac20_main_without_domain_matches_pre_fr16_behavior(monkeypatch):
+    captured_with = StringIO()
+    monkeypatch.setattr("sys.stdout", captured_with)
+    exit_code_without_domain = main(["carlos"])
+
+    captured_blank = StringIO()
+    monkeypatch.setattr("sys.stdout", captured_blank)
+    exit_code_blank_domain = main(["carlos", "--domain", ""])
+
+    assert exit_code_without_domain == exit_code_blank_domain == 0
+    assert captured_with.getvalue() == captured_blank.getvalue()
 
 
 def test_ac14_main_without_args_runs_real_session_until_eof(monkeypatch):

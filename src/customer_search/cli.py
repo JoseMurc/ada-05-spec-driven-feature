@@ -2,7 +2,7 @@
 
 import argparse
 import sys
-from typing import Optional, Sequence
+from collections.abc import Sequence
 
 from customer_search.formatting import format_output
 from customer_search.search_service import SearchService
@@ -25,10 +25,19 @@ def build_parser() -> argparse.ArgumentParser:
             "If omitted, an interactive session is started."
         ),
     )
+    parser.add_argument(
+        "--domain",
+        default="",
+        help=(
+            "Optional email-domain filter (FR-16). Restricts results to "
+            "customers whose email ends with this domain. Blank or omitted "
+            "leaves search behavior unchanged."
+        ),
+    )
     return parser
 
 
-def main(argv: Optional[Sequence[str]] = None, service: Optional[SearchService] = None) -> int:
+def main(argv: Sequence[str] | None = None, service: SearchService | None = None) -> int:
     """CLI entry point.
 
     Without a query argument, starts the interactive session (FR-11, SR-10);
@@ -50,7 +59,10 @@ def main(argv: Optional[Sequence[str]] = None, service: Optional[SearchService] 
         InteractiveSession(service=search_service).run()
         return 0
 
-    result = search_service.search(args.query)
+    if args.domain:
+        result = search_service.search(args.query, domain=args.domain)
+    else:
+        result = search_service.search(args.query)
 
     output = format_output(result)
     print(output)

@@ -2,8 +2,9 @@
 
 import json
 from pathlib import Path
+
 from customer_search.models import Customer
-from customer_search.repository import CustomerRepository, DEFAULT_DATA_PATH
+from customer_search.repository import DEFAULT_DATA_PATH, CustomerRepository
 
 
 def test_find_all_reads_seed_dataset():

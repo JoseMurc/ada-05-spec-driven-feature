@@ -1,10 +1,11 @@
 """Tests for SearchService search logic and acceptance criteria."""
 
 import dataclasses
+
 from customer_search.messages import NO_RESULTS_MESSAGE
 from customer_search.models import Customer
 from customer_search.repository import CustomerRepository
-from customer_search.search_service import CustomerView, SearchResult, SearchService
+from customer_search.search_service import CustomerView, SearchService
 
 
 class MockRepository(CustomerRepository):
@@ -186,6 +187,70 @@ def test_ac07_no_results_returns_empty_list_and_fixed_message():
     assert res.items == []
     assert res.total == 0
     assert res.message == NO_RESULTS_MESSAGE
+
+
+def test_ac20_domain_filter_restricts_to_matching_email_suffix():
+    customers = [
+        Customer("C-1", "Leo Alvarez", "leo.alvarez@example.com"),
+        Customer("C-2", "Leo Blanco", "leo.blanco@other.org"),
+        Customer("C-3", "Leo Cruz", "leo.cruz@example.com"),
+    ]
+    service = SearchService(repository=MockRepository(customers))
+
+    res = service.search("leo", domain="example.com")
+
+    assert res.status == "OK"
+    ids = {c.cliente_id for c in res.items}
+    assert ids == {"C-1", "C-3"}
+    assert res.total == 2
+
+
+def test_ac20_domain_filter_case_and_diacritic_insensitive():
+    customers = [
+        Customer("C-1", "Leo Alvarez", "leo.alvarez@EXÁMPLE.com"),
+        Customer("C-2", "Leo Blanco", "leo.blanco@other.org"),
+    ]
+    service = SearchService(repository=MockRepository(customers))
+
+    res = service.search("leo", domain="exAmple.COM")
+
+    assert res.status == "OK"
+    assert [c.cliente_id for c in res.items] == ["C-1"]
+
+
+def test_ac20_domain_filter_omitted_or_blank_leaves_behavior_unchanged():
+    customers = [
+        Customer("C-1", "Leo Alvarez", "leo.alvarez@example.com"),
+        Customer("C-2", "Leo Blanco", "leo.blanco@other.org"),
+    ]
+    service = SearchService(repository=MockRepository(customers))
+
+    baseline = service.search("leo")
+    omitted = service.search("leo")
+    blank = service.search("leo", domain="")
+    whitespace_only = service.search("leo", domain="   ")
+
+    assert baseline.status == omitted.status == blank.status == whitespace_only.status == "OK"
+    assert baseline.total == omitted.total == blank.total == whitespace_only.total == 2
+    assert (
+        [c.cliente_id for c in baseline.items]
+        == [c.cliente_id for c in omitted.items]
+        == [c.cliente_id for c in blank.items]
+        == [c.cliente_id for c in whitespace_only.items]
+    )
+
+
+def test_ac20_domain_filter_with_no_matching_customers_returns_no_results():
+    customers = [
+        Customer("C-1", "Leo Alvarez", "leo.alvarez@example.com"),
+    ]
+    service = SearchService(repository=MockRepository(customers))
+
+    res = service.search("leo", domain="nonexistent.net")
+
+    assert res.status == "NO_RESULTS"
+    assert res.items == []
+    assert res.total == 0
 
 
 def test_ac11_user_scope_unrestricted():

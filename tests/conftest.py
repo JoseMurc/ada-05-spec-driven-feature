@@ -1,11 +1,11 @@
 """Shared pytest fixtures for customer search test suite."""
 
-import json
 from pathlib import Path
+
 import pytest
 
 from customer_search.models import Customer
-from customer_search.repository import CustomerRepository, DEFAULT_DATA_PATH
+from customer_search.repository import DEFAULT_DATA_PATH, CustomerRepository
 from customer_search.search_service import SearchService
 
 

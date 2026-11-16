@@ -1,6 +1,7 @@
 """Tests for Customer domain model."""
 
 import pytest
+
 from customer_search.models import Customer
 
 

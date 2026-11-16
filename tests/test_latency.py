@@ -6,6 +6,7 @@ validating p95 <= 50 ms and p99 <= 100 ms.
 
 import statistics
 import time
+
 from customer_search.repository import CustomerRepository
 from customer_search.search_service import SearchService
 

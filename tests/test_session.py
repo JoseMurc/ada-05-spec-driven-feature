@@ -1,6 +1,7 @@
 """Unit tests for InteractiveSession controller."""
 
-from typing import Callable, Iterable, List
+from collections.abc import Callable, Iterable
+
 import pytest
 
 from customer_search.messages import NO_RESULTS_MESSAGE
@@ -8,7 +9,6 @@ from customer_search.models import Customer
 from customer_search.repository import CustomerRepository
 from customer_search.search_service import SearchService
 from customer_search.session import (
-    EXIT_COMMANDS,
     PROMPT,
     WELCOME_BANNER,
     InteractiveSession,
@@ -93,7 +93,7 @@ def test_ac15_welcome_banner_content():
 
 def test_ac15_banner_printed_on_run(mock_service):
     """Verify welcome banner is printed first upon session start (AC-15, SR-11)."""
-    outputs: List[str] = []
+    outputs: list[str] = []
     inputs = scripted_input([":salir"])
 
     session = InteractiveSession(
@@ -109,8 +109,8 @@ def test_ac15_banner_printed_on_run(mock_service):
 
 def test_ac16_prompt_and_single_search(mock_service):
     """Verify prompt text and single search result output (AC-16, SR-12)."""
-    prompts_received: List[str] = []
-    outputs: List[str] = []
+    prompts_received: list[str] = []
+    outputs: list[str] = []
     inputs = scripted_input(["carlos", ":salir"])
 
     def fake_input(prompt: str) -> str:
@@ -136,7 +136,7 @@ def test_ac16_prompt_and_single_search(mock_service):
 
 def test_ac16_multiple_consecutive_searches(mock_service):
     """Verify session processes multiple consecutive queries in the same loop (AC-16, SR-12)."""
-    outputs: List[str] = []
+    outputs: list[str] = []
     inputs = scripted_input(["carlos", "ana", ":exit"])
 
     session = InteractiveSession(
@@ -153,7 +153,7 @@ def test_ac16_multiple_consecutive_searches(mock_service):
 
 def test_ac17_empty_query_keeps_session_active(mock_service):
     """Verify empty query displays message and keeps session active for next query (AC-17, SR-13)."""
-    outputs: List[str] = []
+    outputs: list[str] = []
     inputs = scripted_input(["   ", "carlos", ":salir"])
 
     session = InteractiveSession(
@@ -170,7 +170,7 @@ def test_ac17_empty_query_keeps_session_active(mock_service):
 
 def test_ac17_no_results_keeps_session_active(mock_service):
     """Verify no-results query displays fixed message and keeps session active (AC-17, SR-13)."""
-    outputs: List[str] = []
+    outputs: list[str] = []
     inputs = scripted_input(["termino_inexistente_xyz", "carlos", ":exit"])
 
     session = InteractiveSession(
@@ -200,7 +200,7 @@ def test_ac17_no_results_keeps_session_active(mock_service):
 )
 def test_ac18_exit_commands_terminate_session(spy_service, exit_cmd):
     """Verify exit commands terminate the session without querying service or repository (AC-18, SR-14, VR-04, A-12)."""
-    outputs: List[str] = []
+    outputs: list[str] = []
     # The extra query after the exit command must never be read or searched.
     session = InteractiveSession(
         service=spy_service,
@@ -228,7 +228,7 @@ def test_ac18_exit_commands_terminate_session(spy_service, exit_cmd):
 )
 def test_ac18_legitimate_queries_containing_exit_or_salir_are_searched(spy_service, legitimate_query):
     """Verify queries containing exit words without colon command syntax are treated as queries (AC-18, A-12)."""
-    outputs: List[str] = []
+    outputs: list[str] = []
     session = InteractiveSession(
         service=spy_service,
         input_fn=scripted_input([legitimate_query, ":salir"]),
@@ -260,7 +260,7 @@ def test_ac18_legitimate_queries_containing_exit_or_salir_are_searched(spy_servi
 )
 def test_ac18_text_containing_exit_commands_is_searched_literally(spy_service, not_a_command):
     """Verify text that contains but is not exactly an exit command is a literal search term (VR-04, A-12)."""
-    outputs: List[str] = []
+    outputs: list[str] = []
     session = InteractiveSession(
         service=spy_service,
         input_fn=scripted_input([not_a_command, ":exit"]),
@@ -278,7 +278,7 @@ def test_ac18_text_containing_exit_commands_is_searched_literally(spy_service, n
 
 def test_ac19_eof_error_terminates_gracefully(mock_service):
     """Verify EOFError (Ctrl+D) terminates session without exception (AC-19, EH-05)."""
-    outputs: List[str] = []
+    outputs: list[str] = []
 
     def raise_eof(prompt: str) -> str:
         raise EOFError()
@@ -295,7 +295,7 @@ def test_ac19_eof_error_terminates_gracefully(mock_service):
 
 def test_ac19_keyboard_interrupt_terminates_gracefully(mock_service):
     """Verify KeyboardInterrupt (Ctrl+C) terminates session without exception (AC-19, EH-05)."""
-    outputs: List[str] = []
+    outputs: list[str] = []
 
     def raise_sigint(prompt: str) -> str:
         raise KeyboardInterrupt()
@@ -320,7 +320,7 @@ def test_default_session_initialization():
 
 def test_default_session_uses_real_builtin_input(monkeypatch, capsys):
     """Verify the default session reads from builtins.input at runtime (AC-16, AC-18)."""
-    prompts: List[str] = []
+    prompts: list[str] = []
     inputs = scripted_input(["carlos", ":salir"])
 
     def fake_input(prompt: str) -> str:

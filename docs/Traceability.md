@@ -24,5 +24,6 @@
 | **NFR-03** (Rate limiting) | EH-04 | N/A | Ninguno | Ninguno | **Fuera de alcance** (C-05: ejecución local mono-usuario) |
 | **NFR-04** (Interfaz web, matriz navegador/SO/breakpoint) | Out of Scope | N/A | Ninguno | Ninguno | **Fuera de alcance** (C-04: no existe interfaz web) |
 | **NFR-05** (Accesibilidad de teclado/UI) | Out of Scope | N/A | Ninguno | Ninguno | **Fuera de alcance** (C-04: no existe interfaz web) |
+| **FR-16** (Filtro opcional de dominio de email) | SR-15, VR-05, A-13, AC-20, TS-20 | T-10 | `src/customer_search/search_service.py` (`SearchService.search`)<br>`src/customer_search/cli.py` (`--domain`) | `tests/test_search_service.py` (`test_ac20_domain_filter_restricts_to_matching_email_suffix`, `test_ac20_domain_filter_case_and_diacritic_insensitive`, `test_ac20_domain_filter_omitted_or_blank_leaves_behavior_unchanged`, `test_ac20_domain_filter_with_no_matching_customers_returns_no_results`)<br>`tests/test_cli.py` (`test_build_parser_domain_defaults_to_blank`, `test_ac20_main_with_domain_filters_results`, `test_ac20_main_without_domain_matches_pre_fr16_behavior`) | **Implementado & Probado** |
  
 

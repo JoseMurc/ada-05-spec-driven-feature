@@ -1,6 +1,6 @@
 """Interactive terminal session controller for customer search."""
 
-from typing import Callable, Optional
+from collections.abc import Callable
 
 from customer_search.formatting import format_output
 from customer_search.search_service import SearchService
@@ -21,9 +21,9 @@ class InteractiveSession:
 
     def __init__(
         self,
-        service: Optional[SearchService] = None,
-        input_fn: Optional[Callable[[str], str]] = None,
-        output_fn: Optional[Callable[[str], None]] = None,
+        service: SearchService | None = None,
+        input_fn: Callable[[str], str] | None = None,
+        output_fn: Callable[[str], None] | None = None,
     ) -> None:
         """Initialize InteractiveSession with injectable service and I/O callables.
 
